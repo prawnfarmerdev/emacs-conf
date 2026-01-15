@@ -42,18 +42,37 @@
 
 ;;==============================================================================
 ;;==============================================================================
-;; PACKAGE MANAGEMENT
+;; PACKAGE MANAGEMENT - Deployment configuration for work PC
 ;;==============================================================================
 
-(require 'package)
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("gnu" . "https://elpa.gnu.org/packages/")))
-(package-initialize)
+;; Disable automatic package refresh to avoid network errors
+(setq package-check-signature nil)
+(setq package-quickstart t)
 
-;; Bootstrap use-package
+(require 'package)
+(setq package-archives '(("melpa" . "https://www.mirrorservice.org/sites/melpa.org/packages/")
+                           ("gnu" . "https://elpa.gnu.org/packages/")
+                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+
+;; Initialize without refreshing if possible
+(condition-case err
+    (package-initialize)
+  (error 
+   (message "Warning: Package initialization failed: %s" (error-message-string err))
+   (setq package-enable-at-startup nil)))
+
+;; Bootstrap use-package without network if possible
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+  (condition-case err
+      (progn
+        (package-refresh-contents)
+        (package-install 'use-package))
+    (error
+     (message "Warning: Cannot install use-package: %s" (error-message-string err))
+     ;; Try to load use-package from local elpa if available
+     (load (expand-file-name "elpa/use-package-*/use-package.el" user-emacs-directory) t))))
+
+
 ;;==============================================================================
 ;; EVIL MODE - VIM KEYBINDINGS
 ;;==============================================================================
@@ -145,6 +164,7 @@
   ([remap describe-variable] . helpful-variable)
   ([remap describe-key] . helpful-key))
 
+
 ;;==============================================================================
 ;; FZF - FUZZY DIRECTORY FINDER
 ;;==============================================================================
@@ -159,6 +179,7 @@
         fzf/grep-command "grep -nrH"
         fzf/position-bottom t
         fzf/window-height 15))
+;; C-f binding will be set in general config
 
 (defun my/fzf-project-dirs ()
   "FZF search through common project directories."
