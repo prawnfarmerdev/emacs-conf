@@ -58,6 +58,7 @@
 
 (use-package embark
  :ensure t
+ :defer t
  :bind
  (("C-." . embark-act)
   ("C-," . embark-dwim))
@@ -75,11 +76,13 @@
 
 (use-package marginalia
   :ensure t
-  :init
+  :defer t
+  :config
   (marginalia-mode))
 
 (use-package helpful
   :ensure t
+  :defer t
   :bind
   ([remap describe-function] . helpful-callable)
   ([remap describe-variable] . helpful-variable)
