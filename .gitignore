@@ -1,0 +1,56 @@
+# Emacs temporary files
+*~
+\#*
+.\#*
+
+# Backup files
+*.bak
+*.backup
+
+# Auto-save files
+.#*
+#*
+
+# Emacs directory-local variables
+.dir-locals.el
+.dir-locals-*.el
+
+# Package directories
+elpa/
+*.elc
+
+# Emacs lock files
+.#*
+
+# Custom.el
+custom.el
+
+# Emacs backup directory
+backups/
+transient/
+
+# Emacs recentf file
+recentf
+
+# Emacs autosave files
+auto-save-list/
+
+# Projectile files
+.projectile
+
+# Org-mode files
+*.org_archive
+
+# Session files
+.emacs.desktop
+.emacs.desktop.lock
+
+# Flycheck files
+flycheck_*.el
+
+# LSP cache
+.cache/
+.lsp-session-v1
+
+# Custom theme files
+custom-theme.el
