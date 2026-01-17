@@ -126,6 +126,7 @@
 
 (use-package powershell
   :ensure t
+  :defer t
   :if (eq system-type 'windows-nt))
 
 ;;==============================================================================
