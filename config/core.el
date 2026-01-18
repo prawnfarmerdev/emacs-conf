@@ -52,6 +52,38 @@
 (package-initialize)
 
 ;;==============================================================================
+;; NATIVE COMPILATION (JIT)
+;;==============================================================================
+
+;; Enable native compilation for packages (Emacs 28+)
+(when (fboundp 'native-comp-available-p)
+  ;; Ensure packages are natively compiled when installed
+  (setq package-native-compile t)
+  ;; Enable deferred background compilation
+  (setq native-comp-deferred-compilation t)
+  
+  ;; Helper function to compile all installed packages
+  (defun my/native-compile-all-packages ()
+    "Compile all installed packages natively in the background.
+Useful after updating Emacs or when native compilation was disabled."
+    (interactive)
+    (when (fboundp 'native-compile-async)
+      (dolist (dir (list (expand-file-name "elpa" user-emacs-directory)
+                         (expand-file-name "straight" user-emacs-directory)
+                         (expand-file-name "~/.config/emacs/elpa")))
+        (when (file-directory-p dir)
+          (native-compile-async dir t)))
+      (message "Native compilation started for all packages in background")))
+  
+  ;; Helper function to compile configuration files
+  (defun my/native-compile-config ()
+    "Compile configuration files natively for faster loading."
+    (interactive)
+    (when (fboundp 'native-compile-async)
+      (native-compile-async (expand-file-name "config" user-emacs-directory) t)
+      (message "Native compilation started for configuration files"))))
+
+;;==============================================================================
 ;; WHICH-KEY
 ;;==============================================================================
 
