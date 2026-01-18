@@ -76,6 +76,10 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 2. Format: `hostname,username` (one per line, header optional)
 3. Use `C-S-f` to connect to servers
 4. Creates perspectives named after servers for workspace isolation
+5. **TRAMP integration** (default): Opens remote directory via TRAMP (`/ssh:user@hostname:`)
+   - Configure: `(setq my/ssh-use-tramp t)` (default) for TRAMP, `nil` for eshell SSH
+   - Modes: `my/ssh-tramp-mode`: `'dired` (file browser) or `'shell` (remote shell)
+6. **SSH key management**: Prompts to copy SSH key if not configured (configurable via `my/ssh-prompt-for-key-copy`)
 
 ### GitHub CLI (gh)
 1. Install GitHub CLI: https://cli.github.com/
