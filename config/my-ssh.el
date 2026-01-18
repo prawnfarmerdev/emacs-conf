@@ -29,6 +29,16 @@ CSV format: hostname,username (one per line, header optional)")
   "Column index (0-based) for username in CSV file.
 If column doesn't exist, use default username.")
 
+(defvar my/ssh-use-tramp t
+  "If non-nil, use TRAMP for remote connections instead of eshell SSH.
+TRAMP provides better integration with Emacs buffers and files.")
+
+(defvar my/ssh-tramp-mode 'dired
+  "TRAMP connection mode: 'dired or 'shell.
+When `my/ssh-use-tramp' is non-nil, determines what to open:
+- 'dired: Open dired on remote home directory
+- 'shell: Open shell buffer connected via TRAMP")
+
 ;;==============================================================================
 ;; CSV PARSING
 ;;==============================================================================
@@ -114,6 +124,22 @@ Return the eshell buffer."
       (eshell-send-input))
     (get-buffer "*eshell*")))
 
+(defun my/ssh-connect-tramp (hostname username)
+  "Open TRAMP connection to HOSTNAME as USERNAME.
+Opens dired or shell on remote home directory via TRAMP SSH."
+  (let ((tramp-path (format "/ssh:%s@%s:" username hostname)))
+    (message "Opening TRAMP connection: %s" tramp-path)
+    (cond
+     ((eq my/ssh-tramp-mode 'dired)
+      ;; Open dired on remote directory
+      (dired tramp-path))
+     ((eq my/ssh-tramp-mode 'shell)
+      ;; Open shell with TRAMP default directory
+      (let ((default-directory tramp-path))
+        (shell)))
+     (t
+      (error "Invalid my/ssh-tramp-mode: %s" my/ssh-tramp-mode)))))
+
 ;;==============================================================================
 ;; MAIN SSH SESSIONIZER FUNCTION
 ;;==============================================================================
@@ -130,8 +156,10 @@ Interactive function bound to C-S-f."
         (message "Connecting to %s@%s in perspective %s" username hostname persp-name)
         ;; Check SSH key and prompt to copy if needed
         (my/ssh-check-key-copy hostname username)
-        ;; Open SSH connection
-        (my/ssh-connect-eshell hostname username)))))
+        ;; Open SSH connection (TRAMP or eshell)
+        (if my/ssh-use-tramp
+            (my/ssh-connect-tramp hostname username)
+          (my/ssh-connect-eshell hostname username))))))
 
 ;;==============================================================================
 ;; SSH KEY DETECTION (OPTIONAL)
