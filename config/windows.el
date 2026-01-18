@@ -91,9 +91,9 @@
 ;; WINDOWS TERMINAL CONFIGURATION
 ;;==============================================================================
 
-;; Use eshell as default terminal on Windows (vterm doesn't work well)
-(defun my/open-terminal-here ()
-  "Open terminal in current directory (eshell on Windows)."
+;; Use eshell as default terminal on Windows
+(defun my/open-vterm-here ()
+  "Open terminal (eshell) in current directory (Windows version)."
   (interactive)
   (let ((default-directory (if (bound-and-true-p my/current-dir)
                                (funcall 'my/current-dir)

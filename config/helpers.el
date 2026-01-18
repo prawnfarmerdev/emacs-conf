@@ -13,28 +13,26 @@
       (file-name-directory file)
     default-directory))
 
+;;;###autoload
 (defun my/open-current-dir-dired ()
   "Open dired in current buffer's directory."
   (interactive)
   (dired (my/current-dir)))
 
-(defun my/open-vterm-here ()
-  "Open eshell in current buffer's directory.
-Uses eshell for cross-platform compatibility."
-  (interactive)
-  (let ((default-directory (my/current-dir)))
-    (eshell)))
+
 
 (defvar my/search-use-regexp t
   "If non-nil, use regexp search with consult-ripgrep.
 If nil, use fixed strings search.")
 
+;;;###autoload
 (defun my/consult-ripgrep-toggle-regex ()
   "Toggle between regexp and fixed string search for consult-ripgrep."
   (interactive)
   (setq my/search-use-regexp (not my/search-use-regexp))
   (message "Search mode: %s" (if my/search-use-regexp "regexp" "fixed strings")))
 
+;;;###autoload
 (defun my/consult-ripgrep-current-dir ()
   "Run consult-ripgrep in current directory.
 Uses regexp or fixed strings based on `my/search-use-regexp`."
@@ -49,6 +47,7 @@ Uses regexp or fixed strings based on `my/search-use-regexp`."
     (let ((consult-ripgrep-args args))
       (consult-ripgrep (my/current-dir)))))
 
+;;;###autoload
 (defun my/consult-find-current-dir ()
   "Run consult-find in current directory for fuzzy file search."
   (interactive)
@@ -58,6 +57,7 @@ Uses regexp or fixed strings based on `my/search-use-regexp`."
 ;; PROJECT MANAGEMENT
 ;;==============================================================================
 
+;;;###autoload
 (defun my/create-new-project ()
   "Create new project directory with git and GitHub setup.
 Asks for project name, creates directory in ~/projects/, initializes git,

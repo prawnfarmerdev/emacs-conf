@@ -289,16 +289,18 @@
      "C-f" 'my/consult-sessionizer)
     
     ;; C-S-f for SSH sessionizer (global) - evil states  
-    (general-define-key
-     :states '(normal insert visual emacs)
-     :keymaps 'global
-     "C-S-f" 'my/ssh-sessionizer)
+    (when (fboundp 'my/ssh-sessionizer)
+      (general-define-key
+       :states '(normal insert visual emacs)
+       :keymaps 'global
+       "C-S-f" 'my/ssh-sessionizer))
     
     ;; C-S-p for GitHub PR (global) - evil states
-    (general-define-key
-     :states '(normal insert visual emacs)
-     :keymaps 'global
-     "C-S-p" 'my/open-github-pr)
+    (when (fboundp 'my/open-github-pr)
+      (general-define-key
+       :states '(normal insert visual emacs)
+       :keymaps 'global
+       "C-S-p" 'my/open-github-pr))
     
     ;; C-S-n for new project (global) - evil states
     (general-define-key
@@ -312,14 +314,16 @@
      "C-f" 'my/consult-sessionizer)
     
     ;; C-S-f for SSH sessionizer (global) - global
-    (general-define-key
-     :keymaps 'global
-     "C-S-f" 'my/ssh-sessionizer)
+    (when (fboundp 'my/ssh-sessionizer)
+      (general-define-key
+       :keymaps 'global
+       "C-S-f" 'my/ssh-sessionizer))
     
     ;; C-S-p for GitHub PR (global) - global
-    (general-define-key
-     :keymaps 'global
-     "C-S-p" 'my/open-github-pr)
+    (when (fboundp 'my/open-github-pr)
+      (general-define-key
+       :keymaps 'global
+       "C-S-p" 'my/open-github-pr))
     
      ;; C-S-n for new project (global) - global
      (general-define-key

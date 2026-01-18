@@ -31,6 +31,7 @@
   (magit-todos-mode))
 
 ;; Helper: Open magit status in current directory
+;;;###autoload
 (defun my/magit-status-current-dir ()
   "Open magit status in current buffer's directory."
   (interactive)
@@ -38,6 +39,7 @@
     (magit-status)))
 
 ;; Helper: Magit file dispatch (like lazygit)
+;;;###autoload
 (defun my/magit-dispatch ()
   "Open magit dispatch for quick Git operations.
 Provides a lazygit-like interface with common actions."
@@ -46,6 +48,7 @@ Provides a lazygit-like interface with common actions."
     (magit-dispatch)))
 
 ;; Helper: Git blame current file
+;;;###autoload
 (defun my/magit-blame-current-file ()
   "Open magit blame for current file."
   (interactive)
@@ -53,6 +56,7 @@ Provides a lazygit-like interface with common actions."
     (magit-blame)))
 
 ;; Helper: Git log current file
+;;;###autoload
 (defun my/magit-log-current-file ()
   "Open magit log for current file."
   (interactive)
@@ -60,6 +64,7 @@ Provides a lazygit-like interface with common actions."
     (magit-log-current)))
 
 ;; Helper: Quick stage and commit
+;;;###autoload
 (defun my/magic-commit ()
   "Stage all changes and commit with a quick message."
   (interactive)
@@ -68,6 +73,7 @@ Provides a lazygit-like interface with common actions."
     (magit-commit-create)))
 
 ;; Helper: Git push current branch
+;;;###autoload
 (defun my/magit-push-current ()
   "Push current branch to remote."
   (interactive)
@@ -75,6 +81,7 @@ Provides a lazygit-like interface with common actions."
     (magit-push-current-to-pushremote nil)))
 
 ;; Helper: Git pull current branch
+;;;###autoload
 (defun my/magit-pull-current ()
   "Pull current branch from remote."
   (interactive)
@@ -82,36 +89,42 @@ Provides a lazygit-like interface with common actions."
     (magit-pull-from-pushremote nil)))
 
 ;; Additional Git workflows
+;;;###autoload
 (defun my/magit-stash ()
   "Open magit stash interface."
   (interactive)
   (let ((default-directory (my/current-dir)))
     (magit-stash)))
 
+;;;###autoload
 (defun my/magit-branch ()
   "Open magit branch interface."
   (interactive)
   (let ((default-directory (my/current-dir)))
     (magit-branch)))
 
+;;;###autoload
 (defun my/magit-merge ()
   "Open magit merge interface."
   (interactive)
   (let ((default-directory (my/current-dir)))
     (magit-merge)))
 
+;;;###autoload
 (defun my/magit-rebase ()
   "Open magit rebase interface."
   (interactive)
   (let ((default-directory (my/current-dir)))
     (magit-rebase)))
 
+;;;###autoload
 (defun my/magit-fetch ()
   "Fetch from remote."
   (interactive)
   (let ((default-directory (my/current-dir)))
     (magit-fetch)))
 
+;;;###autoload
 (defun my/magit-remote ()
   "Manage remotes."
   (interactive)
@@ -122,6 +135,7 @@ Provides a lazygit-like interface with common actions."
 ;; GITHUB INTEGRATION
 ;;==============================================================================
 
+;;;###autoload
 (defun my/open-github-pr ()
   "Open GitHub compare page for current branch in browser.
 Uses git remote URL and current branch to construct GitHub URL."

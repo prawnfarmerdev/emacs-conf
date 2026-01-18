@@ -35,7 +35,8 @@
 ;; Define functions after consult is loaded
 (with-eval-after-load 'consult
   
-  ;; Main navigation function: Directory selection with perspective management
+   ;; Main navigation function: Directory selection with perspective management
+  ;;;###autoload
   (defun my/consult-sessionizer ()
     "Consult-based directory selection with perspective workspace management.
 Switches to perspective named after directory and opens dired."
@@ -57,7 +58,8 @@ Switches to perspective named after directory and opens dired."
               (dired selected)
               (message "Perspective: %s" dir-name)))))))
 
-  ;; Simple directory selection (without perspective management)
+   ;; Simple directory selection (without perspective management)
+  ;;;###autoload
   (defun my/consult-project-dirs ()
     "Consult-based directory selection from common project directories."
     (interactive)
@@ -72,13 +74,15 @@ Switches to perspective named after directory and opens dired."
           (when selected
             (dired selected))))))
 
-  ;; Enhanced consult-find with better preview and filtering
+   ;; Enhanced consult-find with better preview and filtering
+  ;;;###autoload
   (defun my/consult-find-enhanced ()
     "Enhanced consult-find with improved preview and filtering."
     (interactive)
     (consult-find (my/current-dir)))
 
-  ;; Directory-based consult-ripgrep
+   ;; Directory-based consult-ripgrep
+  ;;;###autoload
   (defun my/consult-ripgrep-dir ()
     "Run consult-ripgrep starting from selected directory."
     (interactive)
@@ -94,7 +98,8 @@ Switches to perspective named after directory and opens dired."
             (let ((default-directory selected))
               (call-interactively #'consult-ripgrep)))))))
 
-  ;; Quick file search in current directory
+   ;; Quick file search in current directory
+  ;;;###autoload
   (defun my/consult-find-current ()
     "Quick file search in current directory with consult-find."
     (interactive)

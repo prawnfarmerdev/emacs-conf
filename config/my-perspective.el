@@ -12,6 +12,19 @@
   :demand t
   :bind (("C-x k" . persp-kill-buffer*)
          ("C-x C-b" . persp-list-buffers))
+  :commands (my/persp-switch-or-create
+             my/persp-kill-current
+             my/persp-rename-current
+             my/persp-list
+             my/persp-ibuffer-full
+             my/persp-switch-full
+             persp-switch
+             persp-next
+             persp-prev
+             persp-switch-last
+             persp-switch-quick
+             persp-state-save
+             persp-state-load)
   :custom
   (persp-mode-prefix-key (kbd "C-x x"))
   :config
