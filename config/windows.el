@@ -108,8 +108,7 @@
 ;; EXECUTABLE OVERRIDES FOR WINDOWS
 ;;==============================================================================
 
-;; Override fzf executable path for Windows
-(setq fzf/executable "fzf.exe")
+;; fzf no longer used (replaced by consult)
 
 ;; Override consult-ripgrep args for Windows
 (setq consult-ripgrep-args
@@ -117,8 +116,7 @@
         "--path-separator" "\\" "--smart-case" "--no-heading" "--line-number"
          "--hidden" "-g" "!.git/" "--" "."))
 
-;; Override fzf grep command for Windows
-(setq fzf/grep-command "grep.exe -nrH")
+;; fzf grep command no longer used (replaced by consult-ripgrep)
 
 ;;==============================================================================
 ;; POWERSHELL INTEGRATION
@@ -134,10 +132,9 @@
 ;;==============================================================================
 
 ;; Note: Windows users should install:
-;; 1. fzf for Windows: https://github.com/junegunn/fzf/releases
-;; 2. ripgrep for Windows: https://github.com/BurntSushi/ripgrep/releases
-;; 3. grep for Windows (from GNUWin32 or Git for Windows)
-;; 4. PowerShell (already included in Windows 10+)
+ ;; 1. ripgrep for Windows: https://github.com/BurntSushi/ripgrep/releases
+ ;; (fzf is no longer used - replaced by consult)
+ ;; PowerShell is already included in Windows 10+
 
 (provide 'windows)
 ;;; windows.el ends here

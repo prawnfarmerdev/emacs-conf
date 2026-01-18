@@ -42,18 +42,25 @@ Reuses existing eshell buffer if available."
 (defun my/eshell-tab-complete ()
   "Tab completion for eshell.
 If at beginning of line, insert tab.
-Otherwise, call pcomplete to show completions."
+Otherwise, call pcomplete to show completions and focus completion window."
   (interactive)
   (message "my/eshell-tab-complete called")
   
   (cond
    ((bolp)  ; Beginning of line - insert tab
     (insert "\t"))
-   
+    
    (t
     ;; Call pcomplete with error handling
     (condition-case err
-        (pcomplete)
+        (progn
+          (pcomplete)
+          ;; Ensure display updates
+          (redisplay t)
+          ;; After showing completions, focus the completions window if it exists
+          (let ((comp-buffer (get-buffer "*Completions*")))
+            (when (and comp-buffer (get-buffer-window comp-buffer))
+              (select-window (get-buffer-window comp-buffer)))))
       (error
        (message "pcomplete error: %s" (error-message-string err)))))))
 
@@ -187,7 +194,22 @@ Otherwise, call pcomplete to show completions."
 ;; Setup function for eshell
 (defun my/eshell-setup ()
   "Configure eshell for regular shell shortcuts (not Evil mode)."
+  (message "my-eshell: Setting up eshell buffer %s" (buffer-name))
   (evil-local-mode -1)
+  (message "evil-local-mode after disable: %s" evil-local-mode)
+  (when (fboundp 'evil-emacs-state)
+    (evil-emacs-state))
+  ;; Completion behavior
+  (setq-local completion-cycle-threshold nil) ; Disable tab cycling - use window instead
+  (setq-local completion-auto-help t)        ; Show completions window automatically
+  (setq-local completion-auto-select t)      ; Auto-select completions window for navigation
+  ;; Auto-focus completion window
+  (setq-local display-buffer-alist
+              (append (default-value 'display-buffer-alist)
+                      '(("\\*Completions\\*"
+                         (display-buffer-pop-up-window)
+                         (window-height . 0.3)
+                         (select . t)))))
   ;; Set keybindings locally (override any previous bindings)
   (define-key eshell-mode-map (kbd "C-a") 'eshell-bol)
   (define-key eshell-mode-map (kbd "C-e") 'move-end-of-line)
@@ -204,6 +226,10 @@ Otherwise, call pcomplete to show completions."
   (define-key eshell-mode-map (kbd "TAB") 'my/eshell-tab-complete)
   (define-key eshell-cmpl-mode-map (kbd "TAB") 'my/eshell-tab-complete)
   (local-set-key (kbd "TAB") 'my/eshell-tab-complete)
+  ;; Shift-Tab for reverse completion
+  (define-key eshell-mode-map (kbd "S-TAB") 'pcomplete-reverse)
+  (define-key eshell-cmpl-mode-map (kbd "S-TAB") 'pcomplete-reverse)
+  (local-set-key (kbd "S-TAB") 'pcomplete-reverse)
   ;; Completion navigation (like bash)
   (when (fboundp 'pcomplete-expand)
     (define-key eshell-mode-map (kbd "C-n") 'pcomplete-expand)
@@ -239,7 +265,22 @@ Otherwise, call pcomplete to show completions."
 ;; Output filtering
 (add-hook 'eshell-output-filter-functions 'eshell-postoutput-scroll-to-bottom)
 
+;;==============================================================================
+;; COMPLETION LIST CONFIGURATION
+;;==============================================================================
 
+(defun my/eshell-completion-list-setup ()
+  "Set up keybindings for completion list buffer."
+  (when (derived-mode-p 'completion-list-mode)
+    ;; Use C-n/C-p for navigation in addition to n/p
+    (define-key completion-list-mode-map (kbd "C-n") 'next-completion)
+    (define-key completion-list-mode-map (kbd "C-p") 'previous-completion)
+    ;; Also allow Tab/Shift-Tab for navigation
+    (define-key completion-list-mode-map (kbd "TAB") 'next-completion)
+    (define-key completion-list-mode-map (kbd "S-TAB") 'previous-completion)
+    (message "my-eshell: Completion list navigation configured")))
+
+(add-hook 'completion-list-mode-hook #'my/eshell-completion-list-setup)
 
 (provide 'my-eshell)
 ;;; my-eshell.el ends here

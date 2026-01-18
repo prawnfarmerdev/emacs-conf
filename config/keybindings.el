@@ -33,9 +33,9 @@
      "fg" '(my/consult-find-current-dir :which-key "fuzzy find files (consult)")
      "fs" '(save-buffer :which-key "save file")
      "fr" '(recentf-open-files :which-key "recent files")
-     "fd" '(my/fzf-project-dirs :which-key "find directory (fzf)")
-     "fz" '(fzf :which-key "fzf file search")
-     "f/" '(my/fzf-grep :which-key "fzf grep search")
+     "fd" '(my/consult-project-dirs :which-key "find directory (consult)")
+     "fz" '(my/consult-find-enhanced :which-key "enhanced file search (consult)")
+     "f/" '(my/consult-ripgrep-current-dir :which-key "search text (consult)")
     
     ;; Search
     "/" '(my/consult-ripgrep-current-dir :which-key "search text in current dir")
@@ -124,9 +124,9 @@
      "fg" '(my/consult-find-current-dir :which-key "fuzzy find files (consult)")
      "fs" '(save-buffer :which-key "save file")
      "fr" '(recentf-open-files :which-key "recent files")
-     "fd" '(my/fzf-project-dirs :which-key "find directory (fzf)")
-     "fz" '(fzf :which-key "fzf file search")
-     "f/" '(my/fzf-grep :which-key "fzf grep search")
+     "fd" '(my/consult-project-dirs :which-key "find directory (consult)")
+     "fz" '(my/consult-find-enhanced :which-key "enhanced file search (consult)")
+     "f/" '(my/consult-ripgrep-current-dir :which-key "search text (consult)")
     
     ;; Search
     "/" '(my/consult-ripgrep-current-dir :which-key "search text in current dir")
@@ -273,12 +273,12 @@
     (general-define-key
      :states '(normal insert visual emacs)
      :keymaps 'global
-     "C-f" 'my/emacs-sessionizer)
+     "C-f" 'my/consult-sessionizer)
     
     ;; C-f for tmux sessionizer (global) - global
     (general-define-key
      :keymaps 'global
-     "C-f" 'my/emacs-sessionizer))
+     "C-f" 'my/consult-sessionizer))
 
  ;; Quick access bindings in normal mode (no prefix)
  (with-eval-after-load 'evil

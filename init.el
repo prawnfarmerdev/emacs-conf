@@ -35,7 +35,7 @@
 (load "my-eshell")    ; Enhanced eshell configuration
 (load "my-perspective")  ; Workspace management with custom switcher
 (load "my-tab-line")   ; Tab-bar integration with perspective
-(load "my-fzf")       ; FZF fuzzy finder with directory functions
+(load "my-navigation") ; Consult-based navigation (replaces FZF)
 (load "keybindings")  ; Tmux-style keybindings (depends on helpers)
 (load "theme")        ; Solarized theme & face customizations
 (load "languages")    ; Programming language modes

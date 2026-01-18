@@ -165,22 +165,11 @@
   ([remap describe-key] . helpful-key))
 
 ;;==============================================================================
-;; FZF - FUZZY DIRECTORY FINDER (Windows)
+;; CONSULT DIRECTORY FINDER (Windows)
 ;;==============================================================================
 
-(use-package fzf
-  :ensure t
-  :bind (("C-f" . my/fzf-project-dirs))
-  :config
-  (setq fzf/args "-x --print-query --margin=1,0 --no-hscroll"
-        fzf/executable "fzf"
-        fzf/git-grep-args "-i --line-number %s"
-        fzf/grep-command "grep -nrH"
-        fzf/position-bottom t
-        fzf/window-height 15))
-
-(defun my/fzf-project-dirs ()
-  "FZF search through common project directories (Windows paths)."
+(defun my/consult-project-dirs-windows ()
+  "Consult-based directory selection for Windows."
   (interactive)
   (let* ((dirs (list (expand-file-name "~/Documents")
                      (expand-file-name "~/Desktop")
@@ -188,19 +177,29 @@
                      (expand-file-name "~")
                      "C:/projects"
                      "D:/projects"))
-         ;; Use PowerShell Get-ChildItem for Windows
-         (find-cmds (mapcar (lambda (dir)
-                              (when (file-directory-p dir)
-                                (let ((win-dir (replace-regexp-in-string "/" "\\\\" dir)))
-                                  (format "powershell -Command \"Get-ChildItem -Path '%s' -Directory -Depth 0 -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }\""
-                                          win-dir))))
-                            dirs))
-         (valid-cmds (delq nil find-cmds))
-         (combined-cmd (mapconcat 'identity valid-cmds " & "))
-         (fzf-cmd (format "cmd /c \"(%s) | fzf\"" combined-cmd))
-         (result (string-trim (shell-command-to-string fzf-cmd))))
-    (when (and result (not (string-empty-p result)))
-      (dired result))))
+         (candidates (mapcan (lambda (dir)
+                               (when (file-directory-p dir)
+                                 (condition-case err
+                                     (mapcar (lambda (file)
+                                               (when (and (file-directory-p file)
+                                                          (not (member (file-name-nondirectory file) '("." ".."))))
+                                                 file))
+                                             (directory-files dir t nil t))
+                                   (error
+                                    (message "Cannot read directory %s: %s" dir (error-message-string err))
+                                    nil))))
+                             dirs))
+         (filtered-candidates (delq nil candidates)))
+    (when filtered-candidates
+      (consult--read filtered-candidates
+                     :prompt "Select directory: "
+                     :require-match t
+                     :sort nil
+                     :category 'file
+                     :history 'my/directory-history
+                     :action (lambda (selected)
+                               (when selected
+                                 (dired selected)))))))
 
 ;;==============================================================================
 ;; VTERM (Windows alternative - use eshell or powershell)

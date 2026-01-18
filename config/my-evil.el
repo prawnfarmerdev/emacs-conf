@@ -26,7 +26,10 @@
   (define-key evil-normal-state-map (kbd "C-S-c") 'evil-yank-line)
   
   (setq-default indicate-empty-lines t
-                indicate-buffer-boundaries nil))
+                indicate-buffer-boundaries nil)
+  
+  ;; Disable evil in eshell buffers
+  (add-to-list 'evil-buffer-regexps '("\\*eshell\\*")))
 
 (use-package evil-collection
   :ensure t
@@ -38,7 +41,8 @@
 
 ;; Ensure evil stays in emacs state for tabulated-list-mode (used by perspective switcher)
 (with-eval-after-load 'evil
-  (evil-set-initial-state 'tabulated-list-mode 'emacs))
+  (evil-set-initial-state 'tabulated-list-mode 'emacs)
+  (evil-set-initial-state 'eshell-mode 'emacs))
 
 ;; Ensure evil stays in emacs state when entering tabulated-list-mode
 (add-hook 'tabulated-list-mode-hook
