@@ -46,5 +46,38 @@
   :config
   (setq c-basic-offset 4))
 
+;;==============================================================================
+;; TREE-SITTER (Emacs 29+)
+;;==============================================================================
+
+;; Only enable tree-sitter if built-in support is available (Emacs 29+)
+;; The "tree-sitter trio": built-in treesit, treesit-auto, tree-sitter-langs
+(when (fboundp 'treesit-available-p)
+  ;; tree-sitter-langs: Pre-built grammar bundles for many languages
+  (use-package tree-sitter-langs
+    :ensure t
+    :defer t)
+  
+  ;; treesit-auto: Automatically install and use tree-sitter grammars
+  (use-package treesit-auto
+    :ensure t
+    :after tree-sitter-langs
+    :config
+    (setq treesit-auto-install 'prompt
+          treesit-auto-add-to-auto-mode-alist 'all
+          treesit-auto-fallback-alist '((web-mode . (html-ts-mode css-ts-mode))))
+    (global-treesit-auto-mode))
+  
+  ;; Configure specific tree-sitter modes with better defaults
+  ;; Note: treesit-auto will automatically use tree-sitter modes when grammars are available
+  
+  ;; Keep web-mode for HTML/CSS files (but tree-sitter can handle them too)
+  ;; We'll let treesit-auto decide based on grammar availability
+  (setq web-mode-enable-engine-detection nil)
+  
+  ;; Optional: Customize tree-sitter settings for better performance
+  (setq treesit-font-lock-level 4  ; Maximum syntax highlighting
+        treesit-range-settings t))  ; Enable incremental parsing
+
 (provide 'languages)
 ;;; languages.el ends here
