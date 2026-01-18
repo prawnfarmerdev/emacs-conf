@@ -14,15 +14,23 @@
 (setq tab-line-close-button-show nil
       tab-line-new-button-show nil
       tab-line-separator "  ")
-;; Filter to show only buffers visiting files in current perspective
+;; Filter to show buffers for tab-line, filtered by current perspective.
+;; Includes file buffers, dired buffers, and terminal buffers.
 (defun my/tab-line-tabs-buffer-list ()
-  "Return list of buffers visiting files for tab-line, filtered by current perspective."
+  "Return list of buffers for tab-line, filtered by current perspective.
+Includes file buffers, dired buffers, and terminal buffers."
   (let ((buffers (if (and (featurep 'perspective) persp-mode)
                      (persp-get-buffers)
                    (buffer-list))))
     (seq-filter
      (lambda (buf)
-       (buffer-file-name buf))
+       (with-current-buffer buf
+         (or (buffer-file-name buf)
+             (derived-mode-p 'dired-mode)
+             (derived-mode-p 'shell-mode)
+             (derived-mode-p 'eshell-mode)
+             (derived-mode-p 'term-mode)
+             (derived-mode-p 'vterm-mode))))
      buffers)))
 (setq tab-line-tabs-function #'my/tab-line-tabs-buffer-list)
 ;; Custom tab name with numbers
@@ -30,9 +38,17 @@
   "Return tab name with number prefix."
   (let* ((tabs (or buffers (funcall tab-line-tabs-function)))
          (index (and tabs (cl-position buffer tabs :test #'eq)))
-         (name (if (buffer-file-name buffer)
-                   (file-name-nondirectory (buffer-file-name buffer))
-                 (buffer-name buffer))))
+         (name (cond
+                ((buffer-file-name buffer)
+                 (file-name-nondirectory (buffer-file-name buffer)))
+                ((with-current-buffer buffer
+                   (derived-mode-p 'dired-mode))
+                 (let ((dir (with-current-buffer buffer dired-directory)))
+                   (if (stringp dir)
+                       (file-name-nondirectory (directory-file-name dir))
+                     (buffer-name buffer))))
+                (t
+                 (buffer-name buffer)))))
     (if index
         (format "%d:%s" (1+ index) name)
       name)))
