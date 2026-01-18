@@ -1,4 +1,4 @@
-;;; languages.el --- Programming language mode configurations
+;;; languages.el --- Programming language mode configurations -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Configuration for programming language modes.

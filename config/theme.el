@@ -1,4 +1,4 @@
-;;; theme.el --- Theme configuration (Solarized)
+;;; theme.el --- Theme configuration (Solarized) -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Solarized theme configuration with custom face settings.

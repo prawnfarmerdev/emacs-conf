@@ -1,4 +1,4 @@
-;;; windows.el --- Windows-specific configuration overrides
+;;; windows.el --- Windows-specific configuration overrides -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Windows-specific configuration overrides loaded conditionally when

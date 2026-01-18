@@ -1,4 +1,4 @@
-;;; completion.el --- Completion framework (vertico, orderless, consult, embark)
+;;; completion.el --- Completion framework (vertico, orderless, consult, embark) -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Completion framework configuration including vertico, orderless, consult,

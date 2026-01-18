@@ -1,4 +1,4 @@
-;;; my-evil.el --- Evil mode (Vim keybindings) configuration
+;;; my-evil.el --- Evil mode (Vim keybindings) configuration -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Evil mode configuration for Vim-style keybindings.

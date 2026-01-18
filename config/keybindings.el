@@ -1,4 +1,4 @@
-;;; keybindings.el --- Tmux-style keybindings configuration
+;;; keybindings.el --- Tmux-style keybindings configuration -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Keybindings configuration using general.el with tmux/Vim-style bindings.

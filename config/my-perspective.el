@@ -1,4 +1,4 @@
-;;; my-perspective.el --- Perspective workspace management configuration
+;;; my-perspective.el --- Perspective workspace management configuration -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Perspective configuration for tmux-style workspace management.

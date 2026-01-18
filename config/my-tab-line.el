@@ -1,4 +1,4 @@
-;;; my-tab-line.el --- Tab-line configuration with perspective integration
+;;; my-tab-line.el --- Tab-line configuration with perspective integration -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Tab-line configuration showing only file buffers in current perspective.

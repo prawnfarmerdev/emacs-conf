@@ -1,4 +1,4 @@
-;;; git.el --- Git configuration (Magit) for Emacs
+;;; git.el --- Git configuration (Magit) for Emacs -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Magit configuration for Git operations with lazygit-like keybindings.

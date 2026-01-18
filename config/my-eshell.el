@@ -1,4 +1,4 @@
-;;; my-eshell.el --- Enhanced eshell configuration for Emacs
+;;; my-eshell.el --- Enhanced eshell configuration for Emacs -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Comprehensive eshell enhancements including better prompt, completion,

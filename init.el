@@ -1,4 +1,4 @@
-;;; init.el --- Emacs Configuration with Tmux/Vim-style keybindings (Modular)
+;;; init.el --- Emacs Configuration with Tmux/Vim-style keybindings (Modular) -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Tmux-style buffer management with Vim keybindings

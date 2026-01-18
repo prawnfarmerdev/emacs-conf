@@ -1,4 +1,4 @@
-;;; helpers.el --- Helper functions for Emacs configuration
+;;; helpers.el --- Helper functions for Emacs configuration -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Helper functions used throughout the configuration.

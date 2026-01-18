@@ -1,4 +1,4 @@
-;;; my-navigation.el --- Navigation and directory selection with consult
+;;; my-navigation.el --- Navigation and directory selection with consult -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Navigation functions using consult for fuzzy directory and file selection.

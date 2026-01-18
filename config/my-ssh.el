@@ -1,4 +1,4 @@
-;;; my-ssh.el --- SSH sessionizer with consult and perspective integration
+;;; my-ssh.el --- SSH sessionizer with consult and perspective integration -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; SSH sessionizer functionality that:

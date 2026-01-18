@@ -1,4 +1,4 @@
-;;; core.el --- Core Emacs configuration (package management, UI, editor behavior, fonts)
+;;; core.el --- Core Emacs configuration (package management, UI, editor behavior, fonts) -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Core configuration including package management, UI settings, editor behavior,
