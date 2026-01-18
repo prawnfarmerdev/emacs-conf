@@ -275,10 +275,43 @@
      :keymaps 'global
      "C-f" 'my/consult-sessionizer)
     
+    ;; C-S-f for SSH sessionizer (global) - evil states  
+    (general-define-key
+     :states '(normal insert visual emacs)
+     :keymaps 'global
+     "C-S-f" 'my/ssh-sessionizer)
+    
+    ;; C-S-p for GitHub PR (global) - evil states
+    (general-define-key
+     :states '(normal insert visual emacs)
+     :keymaps 'global
+     "C-S-p" 'my/open-github-pr)
+    
+    ;; C-n for new project (global) - evil states
+    (general-define-key
+     :states '(normal insert visual emacs)
+     :keymaps 'global
+     "C-n" 'my/create-new-project)
+    
     ;; C-f for tmux sessionizer (global) - global
     (general-define-key
      :keymaps 'global
-     "C-f" 'my/consult-sessionizer))
+     "C-f" 'my/consult-sessionizer)
+    
+    ;; C-S-f for SSH sessionizer (global) - global
+    (general-define-key
+     :keymaps 'global
+     "C-S-f" 'my/ssh-sessionizer)
+    
+    ;; C-S-p for GitHub PR (global) - global
+    (general-define-key
+     :keymaps 'global
+     "C-S-p" 'my/open-github-pr)
+    
+    ;; C-n for new project (global) - global
+    (general-define-key
+     :keymaps 'global
+     "C-n" 'my/create-new-project))
 
  ;; Quick access bindings in normal mode (no prefix)
  (with-eval-after-load 'evil

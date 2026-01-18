@@ -54,5 +54,78 @@ Uses regexp or fixed strings based on `my/search-use-regexp`."
   (interactive)
   (consult-find (my/current-dir)))
 
+;;==============================================================================
+;; PROJECT MANAGEMENT
+;;==============================================================================
+
+(defun my/create-new-project ()
+  "Create new project directory with git and GitHub setup.
+Asks for project name, creates directory in ~/projects/, initializes git,
+creates README.md, and optionally creates GitHub repository using gh CLI."
+  (interactive)
+  ;; Check if gh CLI is available
+  (unless (executable-find "gh")
+    (message "Warning: GitHub CLI (gh) not found. GitHub repository creation will be skipped."))
+  
+  (let* ((project-name (read-string "Project name: "))
+         (project-dir (expand-file-name (concat "~/projects/" project-name)))
+         (create-github (and (executable-find "gh")
+                             (y-or-n-p "Create GitHub repository? ")))
+         (visibility (when create-github
+                       (if (y-or-n-p "Make repository public? (No for private) ")
+                           "--public"
+                         "--private"))))
+    
+    ;; Validate project name
+    (when (string-empty-p project-name)
+      (error "Project name cannot be empty"))
+    
+    ;; Check if directory already exists
+    (when (file-exists-p project-dir)
+      (if (y-or-n-p (format "Directory %s already exists. Use it? " project-dir))
+          (message "Using existing directory: %s" project-dir)
+        (error "Project directory already exists")))
+    
+    ;; Create directory
+    (make-directory project-dir t)
+    (message "Created directory: %s" project-dir)
+    
+    ;; Change to project directory
+    (let ((default-directory project-dir))
+      ;; Initialize git repository if not already
+      (unless (file-exists-p (expand-file-name ".git" project-dir))
+        (message "Initializing git repository...")
+        (unless (zerop (call-process-shell-command "git init -b main"))
+          (error "Failed to initialize git repository"))
+        
+        ;; Create README.md
+        (with-temp-file (expand-file-name "README.md" project-dir)
+          (insert (format "# %s\n\nProject description\n" project-name)))
+        (message "Created README.md")
+        
+        ;; Initial commit
+        (unless (zerop (call-process-shell-command "git add README.md"))
+          (error "Failed to stage README.md"))
+        (unless (zerop (call-process-shell-command "git commit -m 'initial commit'"))
+          (error "Failed to create initial commit"))
+        (message "Created initial commit")
+        
+        ;; Create GitHub repository if requested
+        (when create-github
+          (message "Creating GitHub repository...")
+          (let ((command (format "gh repo create %s %s --source=. --remote=origin --push" 
+                                 project-name visibility)))
+            (message "Running: %s" command)
+            (let ((exit-code (call-process-shell-command command)))
+              (if (zerop exit-code)
+                  (message "GitHub repository created successfully: %s" project-name)
+                (message "GitHub repository creation may have failed (exit code: %d)" exit-code))))
+          ;; Wait a moment for push to complete
+          (sleep-for 1)))
+      
+      ;; Open the new project directory in dired
+      (dired project-dir)
+      (message "Project created: %s" project-dir))))
+
 (provide 'helpers)
 ;;; helpers.el ends here

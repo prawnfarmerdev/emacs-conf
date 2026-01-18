@@ -36,6 +36,7 @@
 (load "my-perspective")  ; Workspace management with custom switcher
 (load "my-tab-line")   ; Tab-bar integration with perspective
 (load "my-navigation") ; Navigation with consult (replaces FZF)
+(load "my-ssh")       ; SSH sessionizer with consult and perspective
 (load "keybindings")  ; Tmux-style keybindings (depends on helpers)
 (load "theme")        ; Solarized theme & face customizations
 (load "languages")    ; Programming language modes

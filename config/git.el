@@ -118,5 +118,43 @@ Provides a lazygit-like interface with common actions."
   (let ((default-directory (my/current-dir)))
     (magit-remote)))
 
+;;==============================================================================
+;; GITHUB INTEGRATION
+;;==============================================================================
+
+(defun my/open-github-pr ()
+  "Open GitHub compare page for current branch in browser.
+Uses git remote URL and current branch to construct GitHub URL."
+  (interactive)
+  (let ((default-directory (my/current-dir)))
+    (unless (locate-dominating-file default-directory ".git")
+      (error "Not in a git repository"))
+    
+    (let* ((remote-url (string-trim (shell-command-to-string "git config --get remote.origin.url")))
+           (branch (string-trim (shell-command-to-string "git rev-parse --abbrev-ref HEAD")))
+           (github-url remote-url))
+      
+      (when (string-empty-p remote-url)
+        (error "No remote 'origin' configured"))
+      
+      (when (string-empty-p branch)
+        (error "Could not determine current branch"))
+      
+      ;; Convert SSH URL to HTTPS if needed
+      (cond
+       ((string-match "^git@github\\.com:\\(.+\\)\\.git$" github-url)
+        (setq github-url (concat "https://github.com/" (match-string 1 github-url))))
+       ((string-match "^git@github\\.com:\\(.+\\)$" github-url)  ; Without .git
+        (setq github-url (concat "https://github.com/" (match-string 1 github-url))))
+       ((string-match "^https://github\\.com/\\(.+\\)\\.git$" github-url)
+        (setq github-url (replace-regexp-in-string "\\.git$" "" github-url)))
+       ((not (string-match "github\\.com" github-url))
+        (error "Remote URL is not a GitHub repository: %s" github-url)))
+      
+      ;; Construct compare URL
+      (let ((compare-url (concat github-url "/compare/" branch)))
+        (message "Opening GitHub compare: %s" compare-url)
+        (browse-url compare-url)))))
+
 (provide 'git)
 ;;; git.el ends here

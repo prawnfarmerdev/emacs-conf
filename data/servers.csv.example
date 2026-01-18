@@ -1,0 +1,10 @@
+# Server inventory CSV file for SSH sessionizer
+# Format: hostname,username
+# Place this file at ~/.emacs.d/data/servers.csv
+# Or configure my/ssh-server-csv-file variable
+
+# Example servers (replace with your own)
+example.com,admin
+server-1.internal,ubuntu
+192.168.1.100,root
+localhost,${USER}
