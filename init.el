@@ -35,7 +35,7 @@
 (load "my-eshell")    ; Enhanced eshell configuration
 (load "my-perspective")  ; Workspace management with custom switcher
 (load "my-tab-line")   ; Tab-bar integration with perspective
-(load "my-navigation") ; Consult-based navigation (replaces FZF)
+(load "my-navigation") ; Navigation with consult (replaces FZF)
 (load "keybindings")  ; Tmux-style keybindings (depends on helpers)
 (load "theme")        ; Solarized theme & face customizations
 (load "languages")    ; Programming language modes
@@ -55,5 +55,17 @@
 ;; Add any initialization that needs to run after all modules are loaded
 (add-hook 'emacs-startup-hook #'my/display-startup-time)
 
- (provide 'init)
+(provide 'init)
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

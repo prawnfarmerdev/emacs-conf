@@ -38,12 +38,14 @@
                       :foreground "#fdf6e3"
                       :height 1.0
                       :underline nil
+                      :overline nil
                       :box nil)
   (set-face-attribute 'mode-line-inactive nil 
                       :background "#002b36"  ; Darker for inactive
                       :foreground "#586e75"
                       :height 1.0
                       :underline nil
+                      :overline nil
                       :box nil)
   
   ;; Window borders
@@ -97,8 +99,8 @@
                                     (evil-replace-state . " Replace")))
 
   ;; Customize doom-modeline faces for better visibility with Solarized
-  (set-face-attribute 'doom-modeline-bar nil :background "#073642" :underline nil :box nil)
-  (set-face-attribute 'doom-modeline-bar-inactive nil :background "#002b36" :underline nil :box nil)
+  (set-face-attribute 'doom-modeline-bar nil :background "#073642" :underline nil :overline nil :box nil)
+  (set-face-attribute 'doom-modeline-bar-inactive nil :background "#002b36" :underline nil :overline nil :box nil)
   
   ;; Ensure text is visible on dark backgrounds
   (set-face-attribute 'doom-modeline-project-dir nil 

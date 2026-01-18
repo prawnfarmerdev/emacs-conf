@@ -33,9 +33,9 @@
      "fg" '(my/consult-find-current-dir :which-key "fuzzy find files (consult)")
      "fs" '(save-buffer :which-key "save file")
      "fr" '(recentf-open-files :which-key "recent files")
-     "fd" '(my/consult-project-dirs :which-key "find directory (consult)")
-     "fz" '(my/consult-find-enhanced :which-key "enhanced file search (consult)")
-     "f/" '(my/consult-ripgrep-current-dir :which-key "search text (consult)")
+      "fd" '(my/consult-project-dirs :which-key "find directory (consult)")
+      "fz" '(my/consult-find-enhanced :which-key "consult file search")
+      "f/" '(my/consult-ripgrep-dir :which-key "consult ripgrep directory")
     
     ;; Search
     "/" '(my/consult-ripgrep-current-dir :which-key "search text in current dir")
@@ -124,9 +124,9 @@
      "fg" '(my/consult-find-current-dir :which-key "fuzzy find files (consult)")
      "fs" '(save-buffer :which-key "save file")
      "fr" '(recentf-open-files :which-key "recent files")
-     "fd" '(my/consult-project-dirs :which-key "find directory (consult)")
-     "fz" '(my/consult-find-enhanced :which-key "enhanced file search (consult)")
-     "f/" '(my/consult-ripgrep-current-dir :which-key "search text (consult)")
+      "fd" '(my/consult-project-dirs :which-key "find directory (consult)")
+      "fz" '(my/consult-find-enhanced :which-key "consult file search")
+      "f/" '(my/consult-ripgrep-dir :which-key "consult ripgrep directory")
     
     ;; Search
     "/" '(my/consult-ripgrep-current-dir :which-key "search text in current dir")
