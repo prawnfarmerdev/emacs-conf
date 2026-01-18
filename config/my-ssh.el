@@ -128,6 +128,9 @@ Interactive function bound to C-S-f."
              (username (cdr server))
              (persp-name (my/ssh-create-server-perspective hostname)))
         (message "Connecting to %s@%s in perspective %s" username hostname persp-name)
+        ;; Check SSH key and prompt to copy if needed
+        (my/ssh-check-key-copy hostname username)
+        ;; Open SSH connection
         (my/ssh-connect-eshell hostname username)))))
 
 ;;==============================================================================
