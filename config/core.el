@@ -132,12 +132,12 @@
 ;; Disable line numbers in terminal buffers
 (add-hook 'eshell-mode-hook (lambda () (display-line-numbers-mode -1)))
 (add-hook 'term-mode-hook (lambda () (display-line-numbers-mode -1)))
-(add-hook 'vterm-mode-hook (lambda () (display-line-numbers-mode -1)))
+
 (add-hook 'shell-mode-hook (lambda () (display-line-numbers-mode -1)))
 ;; Disable line highlighting in terminal buffers
 (add-hook 'eshell-mode-hook (lambda () (hl-line-mode -1)))
 (add-hook 'term-mode-hook (lambda () (hl-line-mode -1)))
-(add-hook 'vterm-mode-hook (lambda () (hl-line-mode -1)))
+
 (add-hook 'shell-mode-hook (lambda () (hl-line-mode -1)))
 ;; Set black background for terminal input
 (defun my/terminal-set-black-background ()
@@ -171,7 +171,7 @@
         (face-remap-add-relative face :background "#000000")))))
 (add-hook 'eshell-mode-hook #'my/terminal-set-black-background)
 (add-hook 'term-mode-hook #'my/terminal-set-black-background)
-(add-hook 'vterm-mode-hook #'my/terminal-set-black-background)
+
 (add-hook 'shell-mode-hook #'my/terminal-set-black-background)
 
 (setq idle-update-delay 0.0

@@ -30,7 +30,7 @@ Includes file buffers, dired buffers, and terminal buffers."
              (derived-mode-p 'shell-mode)
              (derived-mode-p 'eshell-mode)
              (derived-mode-p 'term-mode)
-             (derived-mode-p 'vterm-mode))))
+             )))
      buffers)))
 (setq tab-line-tabs-function #'my/tab-line-tabs-buffer-list)
 ;; Custom tab name with numbers

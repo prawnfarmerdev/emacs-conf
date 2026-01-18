@@ -132,7 +132,7 @@
 ;; EXECUTABLE OVERRIDES FOR WINDOWS
 ;;==============================================================================
 
-;; fzf no longer used (replaced by consult)
+
 
 ;; Override consult-ripgrep args for Windows
 (setq consult-ripgrep-args
@@ -140,7 +140,7 @@
         "--path-separator" "\\" "--smart-case" "--no-heading" "--line-number"
          "--hidden" "-g" "!.git/" "--" "."))
 
-;; fzf grep command no longer used (replaced by consult-ripgrep)
+
 
 ;;==============================================================================
 ;; POWERSHELL INTEGRATION
@@ -157,7 +157,7 @@
 
 ;; Note: Windows users should install:
  ;; 1. ripgrep for Windows: https://github.com/BurntSushi/ripgrep/releases
- ;; (fzf is no longer used - replaced by consult)
+
  ;; PowerShell is already included in Windows 10+
 
 (provide 'windows)
