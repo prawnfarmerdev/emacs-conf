@@ -261,14 +261,27 @@
    "C-=" 'text-scale-increase
    "C--" 'text-scale-decrease
    "C-0" 'text-scale-adjust)
-  
+
+  ;; C-n/C-p for movement - evil states
+  (general-define-key
+   :states '(normal insert visual emacs)
+   :keymaps 'global
+   "C-n" 'next-line
+   "C-p" 'previous-line)
+
   ;; Font size controls (work in all modes) - global
   (general-define-key
    :keymaps 'global
    "C-=" 'text-scale-increase
    "C--" 'text-scale-decrease
    "C-0" 'text-scale-adjust)
-  
+
+  ;; C-n/C-p for movement - global
+  (general-define-key
+   :keymaps 'global
+   "C-n" 'next-line
+   "C-p" 'previous-line)
+
     ;; C-f for tmux sessionizer (global) - evil states
     (general-define-key
      :states '(normal insert visual emacs)
@@ -287,11 +300,11 @@
      :keymaps 'global
      "C-S-p" 'my/open-github-pr)
     
-    ;; C-n for new project (global) - evil states
+    ;; C-S-n for new project (global) - evil states
     (general-define-key
      :states '(normal insert visual emacs)
      :keymaps 'global
-     "C-n" 'my/create-new-project)
+     "C-S-n" 'my/create-new-project)
     
     ;; C-f for tmux sessionizer (global) - global
     (general-define-key
@@ -308,10 +321,10 @@
      :keymaps 'global
      "C-S-p" 'my/open-github-pr)
     
-    ;; C-n for new project (global) - global
-    (general-define-key
-     :keymaps 'global
-     "C-n" 'my/create-new-project))
+     ;; C-S-n for new project (global) - global
+     (general-define-key
+      :keymaps 'global
+      "C-S-n" 'my/create-new-project))
 
  ;; Quick access bindings in normal mode (no prefix)
  (with-eval-after-load 'evil
