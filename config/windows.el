@@ -137,8 +137,8 @@
 ;; Override consult-ripgrep args for Windows
 (setq consult-ripgrep-args
       '("rg.exe" "--null" "--line-buffered" "--color=never" "--max-columns=1000"
-        "--path-separator" "\\" "--smart-case" "--no-heading" "--line-number"
-         "--hidden" "-g" "!.git/" "--" "."))
+        "--path-separator" "\\" "--smart-case" "--no-heading" "--with-filename"
+        "--line-number" "--search-zip" "--hidden" "-g" "!.git/"))
 
 
 

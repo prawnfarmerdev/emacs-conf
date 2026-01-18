@@ -19,8 +19,6 @@
   (interactive)
   (dired (my/current-dir)))
 
-
-
 (defvar my/search-use-regexp t
   "If non-nil, use regexp search with consult-ripgrep.
 If nil, use fixed strings search.")
@@ -34,18 +32,42 @@ If nil, use fixed strings search.")
 
 ;;;###autoload
 (defun my/consult-ripgrep-current-dir ()
-  "Run consult-ripgrep in current directory.
-Uses regexp or fixed strings based on `my/search-use-regexp`."
+  "Run consult-ripgrep in current directory with pattern prompt first.
+Prompts for search pattern, then runs consult-ripgrep with pattern pre-filled.
+Avoids empty interface by ensuring pattern is entered before consult starts."
   (interactive)
-  (let ((args (if (boundp 'consult-ripgrep-args)
-                  (if my/search-use-regexp
-                      consult-ripgrep-args
-                    (cons "--fixed-strings" consult-ripgrep-args))
-                '("rg" "--null" "--line-buffered" "--color=never" "--max-columns=1000"
-                  "--path-separator" "/" "--smart-case" "--no-heading" "--line-number"
-                  "--hidden" "-g" "!.git/" "--" "."))))
-    (let ((consult-ripgrep-args args))
-      (consult-ripgrep (my/current-dir)))))
+  (require 'consult)
+  
+  (let ((dir (my/current-dir))
+        (pattern (read-string "Search: ")))
+    
+    (when (string-blank-p pattern)
+      (user-error "Search pattern cannot be empty"))
+    
+    (setq dir (expand-file-name dir))
+    (unless (file-directory-p dir)
+      (user-error "Directory does not exist: %s" dir))
+    
+    ;; Handle fixed string search by inserting --fixed-strings after command name
+    (let ((consult-ripgrep-args
+           (if my/search-use-regexp
+               consult-ripgrep-args
+             ;; For fixed strings, add --fixed-strings after the command name (rg or rg.exe)
+             (if (listp consult-ripgrep-args)
+                 (let ((cmd (car consult-ripgrep-args))
+                       (rest (cdr consult-ripgrep-args)))
+                   (cons cmd (cons "--fixed-strings" rest)))
+               ;; If it's a string, add --fixed-strings after first word
+               (if (string-match "^\\(\\S-+\\)\\(.*\\)" consult-ripgrep-args)
+                   (concat (match-string 1 consult-ripgrep-args)
+                           " --fixed-strings"
+                           (match-string 2 consult-ripgrep-args))
+                 (concat "--fixed-strings " consult-ripgrep-args))))))
+      (condition-case err
+          (consult-ripgrep dir pattern)
+        (error
+         (message "consult-ripgrep error: %s" err)
+         (user-error "Search failed: %s" (error-message-string err)))))))
 
 ;;;###autoload
 (defun my/consult-find-current-dir ()

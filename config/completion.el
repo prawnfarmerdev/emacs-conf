@@ -53,11 +53,11 @@
          consult-preview-max-size 1.0400
          consult-preview-raw-size 307200)
    
-   ;; Configure consult-ripgrep for better performance
-   (setq consult-ripgrep-args
-         '("rg" "--null" "--line-buffered" "--color=never" "--max-columns=1000"
-           "--path-separator" "/" "--smart-case" "--no-heading" "--line-number"
-            "--hidden" "-g" "!.git/" "--" ".")))
+    ;; Configure consult-ripgrep for better performance
+    (setq consult-ripgrep-args
+          '("rg" "--null" "--line-buffered" "--color=never" "--max-columns=1000"
+            "--path-separator" "/" "--smart-case" "--no-heading" "--with-filename"
+            "--line-number" "--search-zip" "--hidden" "-g" "!.git/")))
 
 (use-package embark
  :ensure t

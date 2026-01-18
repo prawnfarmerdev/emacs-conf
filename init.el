@@ -56,6 +56,12 @@
 (when (bound-and-true-p my/is-windows)
   (load "windows"))
 
+;; Test configuration for ripgrep debugging (set to t to enable)
+(defvar my/enable-test-ripgrep nil
+  "If non-nil, load test-ripgrep.el with debugging functions.")
+(when my/enable-test-ripgrep
+  (load "test-ripgrep"))
+
 ;; Display startup time in batch mode (since emacs-startup-hook may not run)
 (when noninteractive
   (my/display-startup-time))
