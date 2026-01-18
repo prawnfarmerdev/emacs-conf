@@ -32,78 +32,80 @@
 ;; CONSULT-BASED NAVIGATION FUNCTIONS
 ;;==============================================================================
 
-;; Define functions after consult is loaded
-(with-eval-after-load 'consult
-  
-   ;; Main navigation function: Directory selection with perspective management
-  ;;;###autoload
-  (defun my/consult-sessionizer ()
-    "Consult-based directory selection with perspective workspace management.
+;; Main navigation function: Directory selection with perspective management
+;;;###autoload
+(defun my/consult-sessionizer ()
+  "Consult-based directory selection with perspective workspace management.
 Switches to perspective named after directory and opens dired."
-    (interactive)
-    (let ((candidates (my/get-directory-candidates)))
-      (when candidates
-        (let ((selected (consult--read candidates
-                                       :prompt "Select directory: "
-                                       :require-match t
-                                       :sort nil
-                                       :category 'file
-                                       :history 'my/directory-history)))
-          (when (and selected (file-directory-p selected))
-            (let ((dir-name (file-name-nondirectory selected)))
-              ;; Switch to or create perspective
-              (my/persp-switch-or-create dir-name)
-              ;; Set default directory and open dired
-              (setq default-directory selected)
-              (dired selected)
-              (message "Perspective: %s" dir-name)))))))
+  (interactive)
+  (require 'consult)
+  (let ((candidates (my/get-directory-candidates)))
+    (when candidates
+      (let ((selected (consult--read candidates
+                                     :prompt "Select directory: "
+                                     :require-match t
+                                     :sort nil
+                                     :category 'file
+                                     :history 'my/directory-history)))
+        (when (and selected (file-directory-p selected))
+          (let ((dir-name (file-name-nondirectory selected)))
+            ;; Switch to or create perspective
+            (my/persp-switch-or-create dir-name)
+            ;; Set default directory and open dired
+            (setq default-directory selected)
+            (dired selected)
+            (message "Perspective: %s" dir-name)))))))
 
-   ;; Simple directory selection (without perspective management)
-  ;;;###autoload
-  (defun my/consult-project-dirs ()
-    "Consult-based directory selection from common project directories."
-    (interactive)
-    (let ((candidates (my/get-directory-candidates)))
-      (when candidates
-        (let ((selected (consult--read candidates
-                                       :prompt "Select directory: "
-                                       :require-match t
-                                       :sort nil
-                                       :category 'file
-                                       :history 'my/directory-history)))
-          (when selected
-            (dired selected))))))
+;; Simple directory selection (without perspective management)
+;;;###autoload
+(defun my/consult-project-dirs ()
+  "Consult-based directory selection from common project directories."
+  (interactive)
+  (require 'consult)
+  (let ((candidates (my/get-directory-candidates)))
+    (when candidates
+      (let ((selected (consult--read candidates
+                                     :prompt "Select directory: "
+                                     :require-match t
+                                     :sort nil
+                                     :category 'file
+                                     :history 'my/directory-history)))
+        (when selected
+          (dired selected))))))
 
-   ;; Enhanced consult-find with better preview and filtering
-  ;;;###autoload
-  (defun my/consult-find-enhanced ()
-    "Enhanced consult-find with improved preview and filtering."
-    (interactive)
-    (consult-find (my/current-dir)))
+;; Enhanced consult-find with better preview and filtering
+;;;###autoload
+(defun my/consult-find-enhanced ()
+  "Enhanced consult-find with improved preview and filtering."
+  (interactive)
+  (require 'consult)
+  (consult-find (my/current-dir)))
 
-   ;; Directory-based consult-ripgrep
-  ;;;###autoload
-  (defun my/consult-ripgrep-dir ()
-    "Run consult-ripgrep starting from selected directory."
-    (interactive)
-    (let ((candidates (my/get-directory-candidates)))
-      (when candidates
-        (let ((selected (consult--read candidates
-                                       :prompt "Search in directory: "
-                                       :require-match t
-                                       :sort nil
-                                       :category 'file
-                                       :history 'my/directory-history)))
-          (when selected
-            (let ((default-directory selected))
-              (call-interactively #'consult-ripgrep)))))))
+;; Directory-based consult-ripgrep
+;;;###autoload
+(defun my/consult-ripgrep-dir ()
+  "Run consult-ripgrep starting from selected directory."
+  (interactive)
+  (require 'consult)
+  (let ((candidates (my/get-directory-candidates)))
+    (when candidates
+      (let ((selected (consult--read candidates
+                                     :prompt "Search in directory: "
+                                     :require-match t
+                                     :sort nil
+                                     :category 'file
+                                     :history 'my/directory-history)))
+        (when selected
+          (let ((default-directory selected))
+            (call-interactively #'consult-ripgrep)))))))
 
-   ;; Quick file search in current directory
-  ;;;###autoload
-  (defun my/consult-find-current ()
-    "Quick file search in current directory with consult-find."
-    (interactive)
-    (consult-find (my/current-dir))))
+;; Quick file search in current directory
+;;;###autoload
+(defun my/consult-find-current ()
+  "Quick file search in current directory with consult-find."
+  (interactive)
+  (require 'consult)
+  (consult-find (my/current-dir)))
 
 ;;==============================================================================
 ;; INTEGRATION WITH EXISTING WORKFLOW

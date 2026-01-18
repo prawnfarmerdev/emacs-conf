@@ -84,6 +84,7 @@
   ;; treesit-auto: Automatically install and use tree-sitter grammars
   (use-package treesit-auto
     :ensure t
+    :defer t
     :after tree-sitter-langs
     :config
     (setq treesit-auto-install 'prompt

@@ -41,7 +41,7 @@
 
 (use-package consult
   :ensure t
-  :demand t
+
   :bind (("C-x b" . consult-buffer)
          ("M-g g" . consult-goto-line)
          ("M-g i" . consult-imenu))
@@ -83,6 +83,7 @@
 
 (use-package helpful
   :ensure t
+  :defer t
   :bind
   ([remap describe-function] . helpful-callable)
   ([remap describe-variable] . helpful-variable)

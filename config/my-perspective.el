@@ -9,7 +9,7 @@
 
 (use-package perspective
   :ensure t
-  :demand t
+
   :bind (("C-x k" . persp-kill-buffer*)
          ("C-x C-b" . persp-list-buffers))
   :commands (my/persp-switch-or-create
