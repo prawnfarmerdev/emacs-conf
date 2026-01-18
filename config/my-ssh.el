@@ -19,8 +19,8 @@ CSV format: hostname,username (one per line, header optional)")
 (defvar my/ssh-default-username (user-login-name)
   "Default username to use if not specified in CSV.")
 
-(defvar my/ssh-prompt-for-key-copy nil
-  "If non-nil, prompt to copy SSH key when connection fails.")
+(defvar my/ssh-prompt-for-key-copy t
+  "If non-nil, automatically copy SSH key when needed (no prompt).")
 
 (defvar my/ssh-csv-hostname-column 0
   "Column index (0-based) for hostname in CSV file.")
@@ -175,23 +175,17 @@ Interactive function bound to C-S-f."
 
 (defun my/ssh-check-key-copy (hostname username)
   "Check if SSH key needs to be copied to HOSTNAME for USERNAME.
-If `my/ssh-prompt-for-key-copy' is non-nil, prompt to run ssh-copy-id.
-Only prompts if SSH fails with authentication error, not for network/timeout issues."
+If `my/ssh-prompt-for-key-copy' is non-nil, automatically copy key if SSH fails.
+No prompt - assumes 'yes' for copying."
   (when my/ssh-prompt-for-key-copy
     (let ((default-directory "~/"))
       (condition-case err
-          (let* ((ssh-command (format "ssh -o BatchMode=yes -o ConnectTimeout=5 -q %s@%s exit" username hostname))
-                 (exit-code (call-process-shell-command ssh-command nil nil)))
-            (cond
-             ((zerop exit-code)
-              (message "SSH key already configured for %s@%s" username hostname))
-             ((= exit-code 255)
-              ;; SSH connection failed, could be network or host unreachable
-              (message "SSH connection failed (exit 255) for %s@%s - not prompting for key copy" username hostname))
-             (t
-              ;; Other error (likely authentication)
-              (when (y-or-n-p (format "SSH key not configured for %s@%s. Copy? " username hostname))
-                (shell-command (format "ssh-copy-id %s@%s" username hostname))))))
+          (if (zerop (call-process "ssh" nil nil nil "-o" "BatchMode=yes" "-q"
+                                   (format "%s@%s" username hostname) "exit"))
+              (message "SSH key already configured for %s@%s" username hostname)
+            ;; SSH failed - automatically copy key (no prompt)
+            (message "Copying SSH key to %s@%s..." username hostname)
+            (shell-command (format "ssh-copy-id %s@%s" username hostname)))
         (error (message "SSH check failed: %s" (error-message-string err)))))))
 
 ;;==============================================================================
