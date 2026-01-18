@@ -92,7 +92,7 @@
 ;;==============================================================================
 
 ;; Use eshell as default terminal on Windows
-(defun my/open-vterm-here ()
+(defun my/open-eshell-here ()
   "Open terminal (eshell) in current directory (Windows version)."
   (interactive)
   (let ((default-directory (if (bound-and-true-p my/current-dir)

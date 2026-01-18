@@ -27,7 +27,7 @@
 1. **core.el**: Platform detection, package management, UI, editor behavior, fonts
 2. **my-evil.el**: Evil mode (Vim keybindings)
 3. **completion.el**: Completion framework (vertico, orderless, consult, embark)
-4. **helpers.el**: Helper functions (my/current-dir, my/open-vterm-here, etc.)
+4. **helpers.el**: Helper functions (my/current-dir, my/open-eshell-here, etc.)
 5. **git.el**: Git configuration (Magit) with lazygit-like keybindings
 6. **my-eshell.el**: Enhanced eshell configuration
 7. **my-perspective.el**: Perspective workspace management
@@ -58,7 +58,7 @@ Windows configuration is loaded conditionally when `my/is-windows` is true.
 - **Perspective workspaces**: `C-SPC s` full-screen switcher (RET switch, x delete, g refresh, q quit)
 - **Tmux-style keybindings**: `C-SPC` leader with window splits (`"`, `%`, `q`, `z`)
 - **Search**: `C-SPC /` regexp search, `C-SPC R` toggle regexp/fixed
-- **Enhanced eshell**: `C-SPC t` opens enhanced eshell with git prompt, fish completion, syntax highlighting, aliases, and persistent history
+- **Enhanced eshell**: `C-SPC t e` opens enhanced eshell with git prompt, fish completion, syntax highlighting, aliases, and persistent history
 - **Tabs**: Numbered tab-line showing perspective-filtered file buffers (`C-SPC 1-9`)
 - **Fuzzy finder**: `C-f` directory selection with perspective creation
 - **File operations**: `C-SPC f` prefix for file/directory operations

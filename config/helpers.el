@@ -149,5 +149,24 @@ creates README.md, and optionally creates GitHub repository using gh CLI."
       (dired project-dir)
       (message "Project created: %s" project-dir))))
 
+;;;###autoload
+(defun my/detect-shell ()
+  "Return appropriate shell command for current platform."
+  (cond
+   ((memq system-type '(windows-nt ms-dos cygwin))
+    (if (executable-find "powershell.exe") "powershell.exe" "cmd.exe"))
+   ((executable-find "pwsh") "pwsh")
+   (t "/bin/bash")))
+
+;;;###autoload
+(defun my/open-shell-here ()
+  "Open shell in current buffer's directory with PowerShell detection.
+On Windows, uses powershell.exe. On Linux/macOS, uses pwsh if available,
+otherwise falls back to bash."
+  (interactive)
+  (let ((default-directory (my/current-dir))
+        (explicit-shell-file-name (my/detect-shell)))
+    (shell)))
+
 (provide 'helpers)
 ;;; helpers.el ends here

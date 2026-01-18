@@ -242,7 +242,7 @@
   (interactive)
   (dired (my/current-dir)))
 
-(defun my/open-vterm-here ()
+(defun my/open-eshell-here ()
   "Open terminal in current buffer's directory (eshell on Windows)."
   (interactive)
   (my/open-terminal-here))
@@ -313,7 +313,7 @@ Falls back to consult-grep if ripgrep is not available."
     "s" '(ibuffer :which-key "list buffers")
     "x" '(kill-buffer :which-key "kill buffer")
     "c" '(find-file :which-key "new buffer/find file")
-    "t" '(my/open-vterm-here :which-key "terminal")
+    "t" '(my/open-eshell-here :which-key "terminal")
     
     ;; Buffer navigation
     "b"  '(:ignore t :which-key "buffer")
@@ -376,8 +376,7 @@ Falls back to consult-grep if ripgrep is not available."
 
 ;; Quick access bindings in normal mode (no prefix)
 (with-eval-after-load 'evil
-  (define-key evil-normal-state-map (kbd "-") #'my/open-current-dir-dired)
-  (define-key evil-normal-state-map (kbd "t") #'my/open-vterm-here))
+  (define-key evil-normal-state-map (kbd "-") #'my/open-current-dir-dired))
 
 ;;==============================================================================
 ;; THEME & APPEARANCE

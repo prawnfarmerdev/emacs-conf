@@ -27,7 +27,7 @@ Reuses existing eshell buffer if available."
       (eshell))))
 
 ;; Alias for backward compatibility with existing keybindings
-(defalias 'my/open-vterm-here 'my/eshell-here)
+(defalias 'my/open-eshell-here 'my/eshell-here)
 
 ;;==============================================================================
 ;; COMPLETION ENHANCEMENTS
