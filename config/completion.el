@@ -41,6 +41,7 @@
 
 (use-package consult
   :ensure t
+  :demand t  ; Load immediately to avoid consult--read errors
 
   :bind (("C-x b" . consult-buffer)
          ("M-g g" . consult-goto-line)

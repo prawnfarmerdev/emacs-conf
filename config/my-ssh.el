@@ -19,7 +19,7 @@ CSV format: hostname,username (one per line, header optional)")
 (defvar my/ssh-default-username (user-login-name)
   "Default username to use if not specified in CSV.")
 
-(defvar my/ssh-prompt-for-key-copy t
+(defvar my/ssh-prompt-for-key-copy nil
   "If non-nil, prompt to copy SSH key when connection fails.")
 
 (defvar my/ssh-csv-hostname-column 0
@@ -79,6 +79,7 @@ Each line should have format: hostname,username"
   "Interactively select a server from CSV using Consult.
 Return (hostname . username) cons cell."
   (interactive)
+  (require 'consult)  ; Ensure consult is loaded before using consult--read
   (let* ((servers (my/ssh-parse-csv-file my/ssh-server-csv-file))
          (choices (mapcar (lambda (server)
                             (format "%s (%s)" (car server) (cdr server)))
@@ -174,15 +175,23 @@ Interactive function bound to C-S-f."
 
 (defun my/ssh-check-key-copy (hostname username)
   "Check if SSH key needs to be copied to HOSTNAME for USERNAME.
-If `my/ssh-prompt-for-key-copy' is non-nil, prompt to run ssh-copy-id."
+If `my/ssh-prompt-for-key-copy' is non-nil, prompt to run ssh-copy-id.
+Only prompts if SSH fails with authentication error, not for network/timeout issues."
   (when my/ssh-prompt-for-key-copy
     (let ((default-directory "~/"))
       (condition-case err
-          (if (zerop (call-process "ssh" nil nil nil "-o" "BatchMode=yes" "-q"
-                                   (format "%s@%s" username hostname) "exit"))
-              (message "SSH key already configured for %s@%s" username hostname)
-            (when (y-or-n-p (format "SSH key not configured for %s@%s. Copy? " username hostname))
-              (shell-command (format "ssh-copy-id %s@%s" username hostname))))
+          (let* ((ssh-command (format "ssh -o BatchMode=yes -o ConnectTimeout=5 -q %s@%s exit" username hostname))
+                 (exit-code (call-process-shell-command ssh-command nil nil)))
+            (cond
+             ((zerop exit-code)
+              (message "SSH key already configured for %s@%s" username hostname))
+             ((= exit-code 255)
+              ;; SSH connection failed, could be network or host unreachable
+              (message "SSH connection failed (exit 255) for %s@%s - not prompting for key copy" username hostname))
+             (t
+              ;; Other error (likely authentication)
+              (when (y-or-n-p (format "SSH key not configured for %s@%s. Copy? " username hostname))
+                (shell-command (format "ssh-copy-id %s@%s" username hostname))))))
         (error (message "SSH check failed: %s" (error-message-string err)))))))
 
 ;;==============================================================================
