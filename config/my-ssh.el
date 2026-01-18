@@ -33,11 +33,12 @@ If column doesn't exist, use default username.")
   "If non-nil, use TRAMP for remote connections instead of eshell SSH.
 TRAMP provides better integration with Emacs buffers and files.")
 
-(defvar my/ssh-tramp-mode 'dired
-  "TRAMP connection mode: 'dired or 'shell.
+(defvar my/ssh-tramp-mode 'dired-and-terminal
+  "TRAMP connection mode: 'dired, 'shell, or 'dired-and-terminal.
 When `my/ssh-use-tramp' is non-nil, determines what to open:
 - 'dired: Open dired on remote home directory
-- 'shell: Open shell buffer connected via TRAMP")
+- 'shell: Open shell buffer connected via TRAMP
+- 'dired-and-terminal: Open dired then a terminal with same TRAMP path")
 
 ;;==============================================================================
 ;; CSV PARSING
@@ -135,6 +136,12 @@ Opens dired or shell on remote home directory via TRAMP SSH."
       (dired tramp-path))
      ((eq my/ssh-tramp-mode 'shell)
       ;; Open shell with TRAMP default directory
+      (let ((default-directory tramp-path))
+        (shell)))
+     ((eq my/ssh-tramp-mode 'dired-and-terminal)
+      ;; Open dired on remote directory
+      (dired tramp-path)
+      ;; Then open shell with same TRAMP path
       (let ((default-directory tramp-path))
         (shell)))
      (t
