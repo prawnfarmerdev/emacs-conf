@@ -9,25 +9,45 @@
 
 (use-package go-mode
   :ensure t
-  :mode "\\.go\\'")
+  :mode "\\.go\\'"
+  :defer t
+  :hook (go-ts-mode . (lambda () (require 'go-mode)))
+  :config
+  (when (fboundp 'go-mode-setup)
+    (add-hook 'go-ts-mode-hook 'go-mode-setup)))
 
 (use-package python-mode
   :ensure t
-  :mode "\\.py\\'")
+  :mode "\\.py\\'"
+  :defer t
+  :hook (python-ts-mode . (lambda () (require 'python-mode)))
+  :config
+  (when (fboundp 'python-mode)
+    (add-hook 'python-ts-mode-hook 'python-mode-hook)))
 
 (use-package markdown-mode
   :ensure t
   :mode (("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode)))
+         ("\\.markdown\\'" . markdown-mode))
+  :defer t
+  :hook (markdown-ts-mode . (lambda () (require 'markdown-mode)))
+  :config
+  (when (fboundp 'markdown-mode)
+    (add-hook 'markdown-ts-mode-hook 'markdown-mode-hook)))
 
 (use-package js2-mode
   :ensure t
   :mode "\\.js\\'"
+  :defer t
+  :hook (js-ts-mode . (lambda () (require 'js2-mode)))
   :config
-  (setq js2-basic-offset 2))
+  (when (fboundp 'js2-mode)
+    (add-hook 'js-ts-mode-hook 'js2-mode-hook))
+  (add-hook 'js-ts-mode-hook (lambda () (setq js2-basic-offset 2))))
 
 (use-package web-mode
   :ensure t
+  :defer t
   :mode (("\\.html\\'" . web-mode)
          ("\\.css\\'" . web-mode)
          ("\\.jsx\\'" . web-mode)
@@ -43,8 +63,11 @@
          ("\\.h\\'" . c-mode)
          ("\\.cpp\\'" . c++-mode)
          ("\\.hpp\\'" . c++-mode))
+  :defer t
   :config
-  (setq c-basic-offset 4))
+  (setq c-basic-offset 4)
+  (add-hook 'c-ts-mode-hook (lambda () (c-set-style "gnu") (setq c-basic-offset 4)))
+  (add-hook 'c++-ts-mode-hook (lambda () (c-set-style "gnu") (setq c-basic-offset 4))))
 
 ;;==============================================================================
 ;; TREE-SITTER (Emacs 29+)
@@ -64,15 +87,11 @@
     :after tree-sitter-langs
     :config
     (setq treesit-auto-install 'prompt
-          treesit-auto-add-to-auto-mode-alist 'all
-          treesit-auto-fallback-alist '((web-mode . (html-ts-mode css-ts-mode))))
+          treesit-auto-add-to-auto-mode-alist 'all)
     (global-treesit-auto-mode))
   
-  ;; Configure specific tree-sitter modes with better defaults
-  ;; Note: treesit-auto will automatically use tree-sitter modes when grammars are available
-  
-  ;; Keep web-mode for HTML/CSS files (but tree-sitter can handle them too)
-  ;; We'll let treesit-auto decide based on grammar availability
+  ;; Keep web-mode for HTML/CSS files while allowing tree-sitter for JS/TS
+  ;; treesit-auto will add tree-sitter modes, but web-mode can still be used manually
   (setq web-mode-enable-engine-detection nil)
   
   ;; Optional: Customize tree-sitter settings for better performance
