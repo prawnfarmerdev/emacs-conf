@@ -22,25 +22,25 @@
 ;;==============================================================================
 
 ;; Increase GC threshold during startup to reduce garbage collection pauses
-(defvar my/default-gc-cons-threshold gc-cons-threshold)
-(defvar my/default-gc-cons-percentage gc-cons-percentage)
-(setq gc-cons-threshold (* 128 1024 1024))  ; 128MB
-(setq gc-cons-percentage 0.6)
+;; (defvar my/default-gc-cons-threshold gc-cons-threshold)
+;; (defvar my/default-gc-cons-percentage gc-cons-percentage)
+;; (setq gc-cons-threshold (* 128 1024 1024))  ; 128MB
+;; (setq gc-cons-percentage 0.6)
 
 ;; Reset GC after startup
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (setq gc-cons-threshold my/default-gc-cons-threshold
-                  gc-cons-percentage my/default-gc-cons-percentage)
-            (message "GC thresholds reset to defaults")))
+;; (add-hook 'emacs-startup-hook
+;;           (lambda ()
+;;             (setq gc-cons-threshold my/default-gc-cons-threshold
+;;                   gc-cons-percentage my/default-gc-cons-percentage)
+;;             (message "GC thresholds reset to defaults")))
 
 ;;==============================================================================
 ;; PACKAGE MANAGEMENT
 ;;==============================================================================
 
 ;; Disable automatic package refresh to avoid network errors
-(setq package-check-signature nil)
-(setq package-quickstart t)
+;; (setq package-check-signature nil)
+;; (setq package-quickstart t)
 
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
@@ -57,7 +57,6 @@
 
 (use-package which-key
   :ensure t
-  :defer t
   :config
   (which-key-mode)
   (setq which-key-idle-delay 0.0
@@ -69,7 +68,6 @@
 
 (use-package gcmh
   :ensure t
-  :defer t
   :config
   (gcmh-mode 1)
   (setq gcmh-idle-delay 5
