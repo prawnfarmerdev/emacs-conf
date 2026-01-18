@@ -52,17 +52,41 @@
 ;; WINDOWS FONT CONFIGURATION
 ;;==============================================================================
 
-;; Font fallback chain for Windows
-(let ((font (cond
-             ((member "JetBrainsMono Nerd Font" (font-family-list))
-              "JetBrainsMono Nerd Font")
-             ((member "Consolas" (font-family-list))
-              "Consolas")
-             (t "Courier New"))))
-  (setq my/default-font
-        (font-spec :family font
-                   :weight 'bold
-                   :size 12)))
+;; Font configuration for Windows with Nerd Font support
+(defvar my/windows-nerd-font-priority
+  '("Cascadia Code NF"  ; Cascadia Code with Nerd Font glyphs
+    "CaskaydiaCove NF"   ; CaskaydiaCove with Nerd Font glyphs  
+    "JetBrainsMono Nerd Font"
+    "Fira Code Retina"
+    "Consolas"
+    "Courier New")
+  "Priority list of fonts for Windows, nerd fonts first.")
+
+(defun my/setup-windows-fonts ()
+  "Configure fonts for Windows with nerd font support."
+  (let ((font-found nil)
+        (font-name nil))
+    ;; Try to find an available nerd font
+    (dolist (font my/windows-nerd-font-priority)
+      (when (and (not font-found) (member font (font-family-list)))
+        (setq font-found t)
+        (setq font-name font)))
+    
+    ;; If no font found, use default
+    (unless font-found
+      (setq font-name "Consolas"))
+    
+    ;; Set the font
+    (setq my/default-font
+          (font-spec :family font-name
+                     :weight 'bold
+                     :size 12))
+    
+    (message "Windows font set to: %s" font-name)
+    font-name))
+
+;; Run font setup
+(my/setup-windows-fonts)
 ;;==============================================================================
 ;; WINDOWS TERMINAL CONFIGURATION
 ;;==============================================================================

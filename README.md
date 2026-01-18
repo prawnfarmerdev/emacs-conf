@@ -65,9 +65,9 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 2. Start Emacs - packages will be installed automatically.
 
 3. For Windows users, install:
-   - [fzf for Windows](https://github.com/junegunn/fzf/releases)
-   - [ripgrep for Windows](https://github.com/BurntSushi/ripgrep/releases)
+   - [ripgrep for Windows](https://github.com/BurntSushi/ripgrep/releases) (required for text search)
    - [Git for Windows](https://gitforwindows.org/) (includes grep)
+   - Note: FZF is no longer required - navigation uses Emacs Consult package
 
 ## Additional Setup
 
