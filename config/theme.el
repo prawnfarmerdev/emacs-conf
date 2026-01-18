@@ -61,69 +61,6 @@
         evil-replace-state-cursor '("#dc322f" box)
         evil-operator-state-cursor '("#b58900" hollow)))
 
-;;==============================================================================
-;; DOOM MODELINE
-;;==============================================================================
-
-(use-package doom-modeline
-  :ensure t
-  :hook (after-init . doom-modeline-mode)
-  :config
-  (setq doom-modeline-height 35
-        doom-modeline-bar-width 6
-        doom-modeline-window-width-limit 85
-        doom-modeline-minor-modes nil
-        doom-modeline-buffer-file-name-style 'auto
-        doom-modeline-icon nil  ; Disable icons to avoid nerd-icons dependency
-        doom-modeline-major-mode-color-icon nil
-        doom-modeline-buffer-state-icon nil
-        doom-modeline-buffer-modification-icon nil
-        doom-modeline-unicode-fallback t
-        doom-modeline-enable-word-count nil
-        doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode)
-        doom-modeline-indent-info nil
-        doom-modeline-checker-simple-format t
-        doom-modeline-vcs-max-length 12
-        doom-modeline-lsp t
-        doom-modeline-github nil
-        doom-modeline-github-interval 300
-        doom-modeline-modal-icon nil
-        doom-modeline-modal-icon nil
-        doom-modeline-modal t
-        doom-modeline-modal-alist '((evil-emacs-state . " Emacs")
-                                    (evil-insert-state . " Insert")
-                                    (evil-normal-state . " Normal")
-                                    (evil-visual-state . " Visual")
-                                    (evil-motion-state . " Motion")
-                                    (evil-operator-state . " Operator")
-                                    (evil-replace-state . " Replace")))
-
-  ;; Customize doom-modeline faces for better visibility with Solarized
-  (set-face-attribute 'doom-modeline-bar nil :background "#073642" :underline nil :overline nil :box nil)
-  (set-face-attribute 'doom-modeline-bar-inactive nil :background "#002b36" :underline nil :overline nil :box nil)
-  
-  ;; Ensure text is visible on dark backgrounds
-  (set-face-attribute 'doom-modeline-project-dir nil 
-                      :foreground "#93a1a1"  ; Light gray
-                      :weight 'bold)
-  (set-face-attribute 'doom-modeline-buffer-file nil 
-                      :foreground "#fdf6e3"  ; Light cream
-                      :weight 'bold)
-  (set-face-attribute 'doom-modeline-buffer-modified nil 
-                      :foreground "#dc322f"  ; Red for modified
-                      :weight 'bold)
-  (set-face-attribute 'doom-modeline-buffer-major-mode nil 
-                      :foreground "#2aa198"  ; Cyan for major mode
-                      :weight 'bold)
-  (set-face-attribute 'doom-modeline-info nil 
-                      :foreground "#859900"  ; Green for info
-                      :weight 'bold)
-  (set-face-attribute 'doom-modeline-warning nil 
-                      :foreground "#b58900"  ; Yellow for warnings
-                      :weight 'bold)
-  (set-face-attribute 'doom-modeline-urgent nil 
-                      :foreground "#dc322f"  ; Red for urgent
-                      :weight 'bold))
 
 (provide 'theme)
 ;;; theme.el ends here

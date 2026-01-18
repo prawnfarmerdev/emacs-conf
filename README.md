@@ -12,7 +12,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 - **SSH sessionizer**: Connect to servers from CSV inventory with perspective management
 - **GitHub integration**: Quick PR creation, project initialization with gh CLI
 - **Solarized theme**: Dark theme with pure black background
-- **Doom modeline**: Enhanced mode line with evil state display
+- **Custom mode-line**: Enhanced visibility with Solarized theme
 
 ## Keybindings
 
@@ -48,7 +48,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
   - `my-navigation.el` - Consult-based navigation (directory/file search)
   - `my-ssh.el` - SSH sessionizer with server inventory
   - `keybindings.el` - Tmux-style keybindings
-  - `theme.el` - Solarized theme & doom-modeline
+  - `theme.el` - Solarized theme & mode-line customization
   - `languages.el` - Programming language modes
   - `windows.el` - Windows-specific overrides (loaded conditionally)
 - `data/` - Data files (not tracked in git)
