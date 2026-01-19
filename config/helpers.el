@@ -158,6 +158,40 @@ creates README.md, and optionally creates GitHub repository using gh CLI."
    ((executable-find "pwsh") "pwsh")
    (t "/bin/bash")))
 
+(defun my/shell-args (shell-name)
+  "Return shell arguments for SHELL-NAME."
+  (cond
+   ((string-match "powershell\\.exe\\|pwsh" shell-name)
+    '("-NoExit" "-NoLogo" "-Command" "-"))
+   ((string-match "cmd\\.exe" shell-name)
+    '("/k"))
+   (t nil)))
+
+(defun my/configure-shell-mode ()
+  "Configure shell mode for specific shell types.
+Sets comint variables for better PowerShell and general shell experience."
+  (when (derived-mode-p 'shell-mode)
+    (let ((shell-name (file-name-nondirectory explicit-shell-file-name)))
+      (cond
+       ((string-match "powershell\\.exe\\|pwsh" shell-name)
+        ;; PowerShell specific settings
+        (setq-local comint-process-echoes t)
+        (setq-local comint-use-prompt-regexp t)
+        (setq-local comint-prompt-regexp "^PS.*> "))
+       ((string-match "cmd\\.exe" shell-name)
+        ;; cmd.exe settings
+        (setq-local comint-process-echoes t)
+        (setq-local comint-use-prompt-regexp t)
+        (setq-local comint-prompt-regexp "^[A-Z]:\\.*?> "))
+       (t
+        ;; Unix shell defaults
+        (setq-local comint-process-echoes nil)
+        (setq-local comint-use-prompt-regexp nil))))))
+
+;; Run configuration when shell mode starts
+(with-eval-after-load 'shell
+  (add-hook 'shell-mode-hook #'my/configure-shell-mode))
+
 ;;;###autoload
 (defun my/open-shell-here ()
   "Open shell in current buffer's directory with PowerShell detection.
@@ -165,7 +199,8 @@ On Windows, uses powershell.exe. On Linux/macOS, uses pwsh if available,
 otherwise falls back to bash."
   (interactive)
   (let ((default-directory (my/current-dir))
-        (explicit-shell-file-name (my/detect-shell)))
+        (explicit-shell-file-name (my/detect-shell))
+        (explicit-shell-args (my/shell-args explicit-shell-file-name)))
     (shell)))
 
 (provide 'helpers)
