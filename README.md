@@ -7,7 +7,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 - **Tmux-style workspace management**: Split windows, perspectives, tabs
 - **Vim keybindings**: Evil mode with custom enhancements
 - **Cross-platform**: Linux and Windows support with platform-specific overrides
-- **Eshell terminal**: Cross-platform terminal with regular shell shortcuts
+- **Terminal support**: eshell (cross-platform) and eat (excellent Windows SSH support)
 - **Fuzzy search**: Consult-based navigation (replaces FZF), vertico completion
 - **SSH sessionizer**: Connect to servers from CSV inventory with perspective management
 - **GitHub integration**: Quick PR creation, project initialization with gh CLI
@@ -25,7 +25,8 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 ### Leader Key: `C-SPC` (Ctrl+Space)
 - **C-SPC /**: Search text in current directory
 - **C-SPC R**: Toggle regex/fixed string search
-- **C-SPC t**: Open terminal (eshell)
+- **C-SPC t e**: Open eshell terminal
+- **C-SPC t t**: Open eat terminal (recommended for Windows SSH)
 - **C-SPC s**: Switch perspective (full screen)
 - **C-SPC b**: Buffer management
 - **C-SPC w**: Window management (split, close, navigate)
@@ -94,7 +95,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 
 ## Notes
 
-- Terminal uses eshell with regular shell shortcuts (Ctrl+a, Ctrl+e, etc.)
+- Terminals: eshell (shell shortcuts) and eat (advanced terminal emulation)
 - Evil mode is disabled in eshell buffers for shell compatibility
 - Pure black background for terminal buffers
 - Startup optimized with garbage collection tuning

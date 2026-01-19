@@ -225,6 +225,21 @@
               (setq-local comint-use-prompt-regexp t)
               (setq-local comint-prompt-regexp "^PS.*> "))))
 
+;; Eat terminal emulator for excellent Windows and SSH support
+(use-package eat
+  :ensure t
+  :config
+  ;; Configure eat for Windows SSH compatibility
+  (defun my/configure-eat-mode-windows ()
+    "Configure eat-mode for Windows SSH compatibility."
+    (when (derived-mode-p 'eat-mode)
+      (when (eq system-type 'windows-nt)
+        ;; Eat provides excellent terminal emulation, SSH should work well
+        (setq-local eat-term-prompt-regexp "^[A-Z]:\\.*?> \\|^PS.*> ")
+        ;; Eat handles pseudo-terminal allocation better than shell-mode
+        (message "eat-mode: SSH should work without -t flag on Windows"))))
+  (add-hook 'eat-mode-hook #'my/configure-eat-mode-windows))
+
 ;;==============================================================================
 ;; HELPER FUNCTIONS
 ;;==============================================================================
@@ -274,9 +289,23 @@
       (let ((explicit-shell-file-name "pwsh")
             (explicit-shell-args '("-NoExit" "-NoLogo" "-NoProfile" "-Command" "-")))
         (shell)))
-      (t
-       (let ((explicit-shell-file-name "/bin/bash"))
-         (shell))))))
+       (t
+        (let ((explicit-shell-file-name "/bin/bash"))
+          (shell))))))
+
+(defun my/open-eat-here ()
+  "Open eat (Emulated Advanced Terminal) in current buffer's directory.
+Eat is a terminal emulator with excellent Windows and SSH support."
+  (interactive)
+  (let ((default-directory (my/current-dir))
+        (shell (cond
+                ((eq system-type 'windows-nt)
+                 (if (executable-find "powershell.exe")
+                     "powershell.exe"
+                   "cmd.exe"))
+                (t
+                 (or (executable-find "bash") "/bin/bash")))))
+    (eat shell)))
 
 ;; Configure shell mode for SSH compatibility
 (defun my/configure-shell-mode-windows ()
@@ -403,7 +432,7 @@ Falls back to consult-grep if ripgrep is not available."
     "c" '(find-file :which-key "new buffer/find file")
     "t"  '(:ignore t :which-key "terminal")
     "te" '(my/open-eshell-here :which-key "eshell")
-    "tt" '(my/open-shell-here :which-key "shell")
+    "tt" '(my/open-eat-here :which-key "eat")
     ;; Buffer navigation
     "b"  '(:ignore t :which-key "buffer")
     "bn" '(next-buffer :which-key "next buffer")
@@ -660,7 +689,8 @@ Falls back to consult-grep if ripgrep is not available."
 ;;    - In eshell: Use `ssh host` (automatically adds -t flag via alias)
 ;;    - In shell mode: Use `ssh -t host` (manual -t flag required)
 ;;    - Or use `M-x my/ssh-windows` interactive function
-;; 3. For best results, use powershell.el terminal (C-SPC t t)
-;; 4. Consider using TRAMP for remote file editing instead of SSH shell
+;; 3. For best results, use eat terminal (C-SPC t t) for excellent SSH support
+;; 4. Alternative: powershell.el terminal or eshell with auto -t flag
+;; 5. Consider using TRAMP for remote file editing instead of SSH shell
 
 ;;; init.el ends here

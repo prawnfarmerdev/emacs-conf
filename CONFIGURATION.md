@@ -59,6 +59,7 @@ Windows configuration is loaded conditionally when `my/is-windows` is true.
 - **Tmux-style keybindings**: `C-SPC` leader with window splits (`"`, `%`, `q`, `z`)
 - **Search**: `C-SPC /` regexp search, `C-SPC R` toggle regexp/fixed
 - **Enhanced eshell**: `C-SPC t e` opens enhanced eshell with git prompt, fish completion, syntax highlighting, aliases, and persistent history
+- **Eat terminal**: `C-SPC t t` opens eat terminal with excellent Windows SSH support and pseudo-terminal emulation
 - **Tabs**: Numbered tab-line showing perspective-filtered file buffers (`C-SPC 1-9`)
 - **Fuzzy finder**: `C-f` directory selection with perspective creation
 - **File operations**: `C-SPC f` prefix for file/directory operations

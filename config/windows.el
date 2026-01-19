@@ -224,7 +224,12 @@ Uses powershell.el if available, otherwise configures cmd.exe for SSH."
  ;; 2. OpenSSH Client (for SSH functionality):
  ;;    - Windows 10/11: Settings > Apps > Optional Features > Add Feature > OpenSSH Client
  ;;    - Or via PowerShell: `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`
- ;; 3. Configure SSH to use -t flag for pseudo-terminal allocation (auto-configured in eshell)
+ ;; 3. For best SSH experience, use eat terminal (C-SPC t t):
+ ;;    - Provides proper pseudo-terminal emulation for SSH
+ ;;    - SSH works without -t flag in eat terminal
+ ;;    - Eat is auto-installed via package configuration
+ ;; 4. Alternative: eshell (C-SPC t e) auto-adds -t flag for SSH
+ ;; 5. Configure SSH to use -t flag for pseudo-terminal allocation (auto-configured in eshell)
 
  ;; PowerShell is already included in Windows 10+
 

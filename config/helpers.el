@@ -229,5 +229,108 @@ On Linux/macOS, uses pwsh if available, otherwise falls back to bash."
             (explicit-shell-args (my/shell-args explicit-shell-file-name)))
         (shell))))))
 
+;;==============================================================================
+;; ANSI-TERM TERMINAL EMULATOR
+;;==============================================================================
+
+;;;###autoload
+(defun my/open-ansi-term-here ()
+  "Open ansi-term (terminal emulator) in current buffer's directory.
+Uses PowerShell on Windows, bash on Unix. Provides better terminal emulation
+than shell-mode for SSH and interactive programs."
+  (interactive)
+  (let ((default-directory (my/current-dir))
+        (shell (cond
+                ((eq system-type 'windows-nt)
+                 (if (executable-find "powershell.exe") 
+                     "powershell.exe"
+                   "cmd.exe"))
+                (t
+                 (or (executable-find "bash") "/bin/bash")))))
+    (ansi-term shell)))
+
+;; Configure term-mode for Windows SSH compatibility
+(defun my/configure-term-mode-windows ()
+  "Configure term-mode for Windows SSH compatibility."
+  (when (derived-mode-p 'term-mode)
+    (when (eq system-type 'windows-nt)
+      ;; Set up term-mode for better terminal emulation
+      (setq-local term-prompt-regexp "^[A-Z]:\\.*?> \\|^PS.*> ")
+      (setq-local term-escape-char ?\C-c)
+      ;; Note: term-mode provides better pseudo-terminal emulation than shell-mode
+      (message "term-mode: For SSH on Windows, use 'ssh -t hostname'"))))
+
+(add-hook 'term-mode-hook #'my/configure-term-mode-windows)
+
+;;==============================================================================
+;; EAT TERMINAL EMULATOR
+;;==============================================================================
+
+;;;###autoload
+(defun my/open-eat-here ()
+  "Open eat (Emulated Advanced Terminal) in current buffer's directory.
+Eat is a terminal emulator with excellent Windows and SSH support."
+  (interactive)
+  (let ((default-directory (my/current-dir))
+        (shell (cond
+                ((eq system-type 'windows-nt)
+                 (if (executable-find "powershell.exe")
+                     "powershell.exe"
+                   "cmd.exe"))
+                (t
+                 (or (executable-find "bash") "/bin/bash")))))
+    (eat shell)))
+
+;; Configure eat for Windows SSH compatibility
+(defun my/configure-eat-mode-windows ()
+  "Configure eat-mode for Windows SSH compatibility."
+  (when (derived-mode-p 'eat-mode)
+    (when (eq system-type 'windows-nt)
+      ;; Eat provides excellent terminal emulation, SSH should work well
+      (setq-local eat-term-prompt-regexp "^[A-Z]:\\.*?> \\|^PS.*> ")
+      ;; Eat handles pseudo-terminal allocation better than shell-mode
+      (message "eat-mode: SSH should work without -t flag on Windows"))))
+
+(with-eval-after-load 'eat
+  (add-hook 'eat-mode-hook #'my/configure-eat-mode-windows))
+
+;;==============================================================================
+;; UNIFIED TERMINAL FUNCTION
+;;==============================================================================
+
+;;;###autoload
+(defun my/open-best-terminal-here ()
+  "Open the best available terminal in current directory.
+Tries: eat -> vterm (Unix only) -> ansi-term -> powershell.el -> shell."
+  (interactive)
+  (let ((default-directory (my/current-dir)))
+    (cond
+     ;; eat (recommended for Windows SSH compatibility)
+     ((fboundp 'eat)
+      (my/open-eat-here))
+     
+     ;; vterm (Unix/Linux only - not recommended for Windows)
+     ((and (not (eq system-type 'windows-nt))
+           (fboundp 'vterm))
+      (vterm))
+     
+     ;; ansi-term (built-in terminal emulator)
+     ((fboundp 'ansi-term)
+      (my/open-ansi-term-here))
+     
+     ;; Windows: try powershell.el first
+     ((and (eq system-type 'windows-nt)
+           (condition-case nil
+               (progn
+                 (unless (fboundp 'powershell)
+                   (require 'powershell))
+                 t)
+             (error nil)))
+      (powershell))
+     
+     ;; Fall back to shell
+     (t
+      (my/open-shell-here)))))
+
 (provide 'helpers)
 ;;; helpers.el ends here

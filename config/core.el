@@ -51,6 +51,26 @@
 ;; Initialize package system (called automatically by Emacs 27+, but call early for use-package)
 (package-initialize)
 
+;; Auto-install missing packages from package-selected-packages
+(defun my/ensure-packages-installed ()
+  "Ensure all packages in `package-selected-packages` are installed."
+  (when (boundp 'package-selected-packages)
+    ;; Refresh package contents if needed
+    (unless package-archive-contents
+      (package-refresh-contents))
+    
+    ;; Install each missing package
+    (dolist (pkg package-selected-packages)
+      (unless (package-installed-p pkg)
+        (message "Installing missing package: %s" pkg)
+        (condition-case err
+            (package-install pkg)
+          (error
+           (message "Failed to install package %s: %s" pkg (error-message-string err))))))))
+
+;; Run package installation (can be commented out after first run)
+(my/ensure-packages-installed)
+
 ;;==============================================================================
 ;; NATIVE COMPILATION (JIT)
 ;;==============================================================================
