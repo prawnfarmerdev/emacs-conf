@@ -100,6 +100,70 @@
                              default-directory)))
     (eshell t)))
 
+;; Windows shell configuration for better SSH compatibility
+(defun my/open-shell-here-windows ()
+  "Open shell on Windows with better terminal support for SSH.
+Uses powershell.el if available, otherwise configures cmd.exe for SSH."
+  (interactive)
+  (let ((default-directory (if (bound-and-true-p my/current-dir)
+                               (funcall 'my/current-dir)
+                             default-directory)))
+    (condition-case err
+        (progn
+          ;; Try to use powershell.el for better terminal integration
+          (unless (fboundp 'powershell)
+            (require 'powershell))
+          (powershell))
+      (error
+       ;; Fall back to cmd.exe with SSH-friendly configuration
+       (message "powershell.el failed: %s, using cmd.exe" (error-message-string err))
+       (let ((explicit-shell-file-name "cmd.exe")
+             (explicit-shell-args '("/k")))
+         ;; Configure comint for better terminal emulation
+         (add-hook 'shell-mode-hook 
+                   (lambda ()
+                     (when (string-match "cmd\\.exe" (or explicit-shell-file-name ""))
+                       (setq-local comint-process-echoes t)
+                       (setq-local comint-use-prompt-regexp t)
+                       (setq-local comint-prompt-regexp "^[A-Z]:\\.*?> "))))
+         (shell))))))
+
+;; SSH alias for Windows to force pseudo-terminal allocation
+(defun my/ssh-with-pty (host)
+  "SSH to HOST with forced pseudo-terminal allocation for Windows."
+  (interactive "sSSH to host: ")
+  (let ((cmd (format "ssh -t %s" host)))
+    (if (eq system-type 'windows-nt)
+        (my/open-shell-here-windows)
+      (shell))
+    (comint-send-string (get-buffer-process (current-buffer)) cmd)
+    (comint-send-input)))
+
+;; Configure shell aliases for Windows SSH compatibility
+(defun my/setup-windows-shell-aliases ()
+  "Set up shell aliases for better SSH experience on Windows."
+  ;; For shell mode (cmd.exe or powershell)
+  (when (eq system-type 'windows-nt)
+    ;; Add ssh alias that forces pseudo-terminal
+    (setq shell-command-switch "-c")
+    ;; Note: cmd.exe doesn't support aliases like bash, so we'd need a wrapper function
+    ;; Instead, we'll configure eshell aliases
+    ))
+  
+;; Configure eshell aliases for Windows
+(defun my/setup-windows-eshell-aliases ()
+  "Set up eshell aliases for Windows SSH compatibility."
+  (when (eq system-type 'windows-nt)
+    (setq eshell-command-aliases-list
+          (append eshell-command-aliases-list
+                  '(("ssh" "ssh -t $*")
+                    ("scp" "scp $*")
+                    ("sftp" "sftp $*"))))))
+
+;; Run setup when eshell loads
+(with-eval-after-load 'eshell
+  (add-hook 'eshell-mode-hook #'my/setup-windows-eshell-aliases))
+
 ;;==============================================================================
 ;; WINDOWS-SPECIFIC PATHS & BACKUPS
 ;;==============================================================================
@@ -157,6 +221,10 @@
 
 ;; Note: Windows users should install:
  ;; 1. ripgrep for Windows: https://github.com/BurntSushi/ripgrep/releases
+ ;; 2. OpenSSH Client (for SSH functionality):
+ ;;    - Windows 10/11: Settings > Apps > Optional Features > Add Feature > OpenSSH Client
+ ;;    - Or via PowerShell: `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`
+ ;; 3. Configure SSH to use -t flag for pseudo-terminal allocation (auto-configured in eshell)
 
  ;; PowerShell is already included in Windows 10+
 

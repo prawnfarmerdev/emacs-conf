@@ -95,6 +95,9 @@
   (define-key evil-visual-state-map (kbd "C-S-c") 'evil-yank)
   (define-key evil-normal-state-map (kbd "C-S-c") 'evil-yank-line)
   
+  ;; Unbind 't' in normal mode to avoid conflict with terminal prefix
+  (define-key evil-normal-state-map (kbd "t") nil)
+  
   (setq-default indicate-empty-lines t
                 indicate-buffer-boundaries nil))
 
@@ -206,21 +209,21 @@
 ;;==============================================================================
 
 ;; On Windows, vterm doesn't work well, so we use eshell or powershell instead
-;; Note: vterm is not installed in this configuration
-(defun my/open-terminal-here ()
-  "Open terminal in current directory (eshell on Windows, vterm on Unix)."
-  (interactive)
-  (let ((default-directory (my/current-dir)))
-    (if (eq system-type 'windows-nt)
-        (eshell t)
-      (if (fboundp 'vterm)
-          (vterm (generate-new-buffer-name "vterm"))
-        (eshell t)))))
 
-;; Optional: PowerShell integration
+
+;; PowerShell integration for better terminal support on Windows
 (use-package powershell
   :ensure t
-  :if (eq system-type 'windows-nt))
+  :if (eq system-type 'windows-nt)
+  :config
+  ;; Configure powershell.el for better terminal experience
+  (setq powershell-args '("-NoExit" "-NoLogo" "-NoProfile"))
+  ;; Ensure powershell buffers are properly configured for SSH
+  (add-hook 'powershell-mode-hook
+            (lambda ()
+              (setq-local comint-process-echoes nil)
+              (setq-local comint-use-prompt-regexp t)
+              (setq-local comint-prompt-regexp "^PS.*> "))))
 
 ;;==============================================================================
 ;; HELPER FUNCTIONS
@@ -244,9 +247,65 @@
   (dired (my/current-dir)))
 
 (defun my/open-eshell-here ()
-  "Open terminal in current buffer's directory (eshell on Windows)."
+  "Open eshell in current buffer's directory."
   (interactive)
-  (my/open-terminal-here))
+  (let ((default-directory (my/current-dir)))
+    (eshell t)))
+
+(defun my/open-shell-here ()
+  "Open shell in current buffer's directory with PowerShell detection."
+  (interactive)
+  (let ((default-directory (my/current-dir)))
+    (cond
+     ;; Use powershell.el if available on Windows
+     ((eq system-type 'windows-nt)
+      (condition-case err
+          (progn
+            (unless (fboundp 'powershell)
+              (require 'powershell))
+            (powershell))
+        (error
+         ;; Fall back to cmd.exe
+         (let ((explicit-shell-file-name "cmd.exe")
+               (explicit-shell-args '("/k")))
+           (shell)))))
+     ;; Unix/Linux: try pwsh then bash
+     ((executable-find "pwsh")
+      (let ((explicit-shell-file-name "pwsh")
+            (explicit-shell-args '("-NoExit" "-NoLogo" "-NoProfile" "-Command" "-")))
+        (shell)))
+      (t
+       (let ((explicit-shell-file-name "/bin/bash"))
+         (shell))))))
+
+;; Configure shell mode for SSH compatibility
+(defun my/configure-shell-mode-windows ()
+  "Configure shell mode for Windows SSH compatibility."
+  (when (derived-mode-p 'shell-mode)
+    (when (stringp explicit-shell-file-name)
+      (let ((shell-name (file-name-nondirectory explicit-shell-file-name)))
+        (cond
+         ((string-match "powershell\\.exe\\|pwsh" shell-name)
+          ;; PowerShell settings
+          (setq-local comint-process-echoes nil)
+          (setq-local comint-use-prompt-regexp t)
+          (setq-local comint-prompt-regexp "^PS.*> "))
+         ((string-match "cmd\\.exe" shell-name)
+          ;; cmd.exe settings for SSH
+          (setq-local comint-process-echoes t)
+          (setq-local comint-use-prompt-regexp t)
+          (setq-local comint-prompt-regexp "^[A-Z]:\\.*?> ")
+          ;; Note: cmd.exe doesn't support SSH aliases, so SSH needs -t flag
+          (message "For SSH on Windows, use 'ssh -t hostname' or eshell with ssh alias"))
+         (t
+          ;; Unix shell defaults
+          (setq-local comint-process-echoes nil)
+          (setq-local comint-use-prompt-regexp nil)))))))
+
+;; Add shell configuration hook
+(add-hook 'shell-mode-hook #'my/configure-shell-mode-windows)
+
+
 
 (defvar my/search-use-regexp t
   "If non-nil, use regexp search with consult-ripgrep.
@@ -282,6 +341,34 @@ Falls back to consult-grep if ripgrep is not available."
   (consult-find (my/current-dir)))
 
 ;;==============================================================================
+;; WINDOWS SSH CONFIGURATION
+;;==============================================================================
+
+;; Configure eshell for Windows SSH compatibility
+(defun my/setup-windows-eshell-ssh ()
+  "Set up eshell aliases for Windows SSH compatibility."
+  (when (eq system-type 'windows-nt)
+    ;; Add ssh alias that forces pseudo-terminal allocation
+    (setq eshell-command-aliases-list
+          (append eshell-command-aliases-list
+                  '(("ssh" "ssh -t $*")
+                    ("scp" "scp $*")
+                    ("sftp" "sftp $*"))))))
+
+;; Run eshell SSH setup when eshell loads
+(with-eval-after-load 'eshell
+  (add-hook 'eshell-mode-hook #'my/setup-windows-eshell-ssh))
+
+;; Interactive SSH function for Windows
+(defun my/ssh-windows (host)
+  "SSH to HOST with proper pseudo-terminal allocation for Windows."
+  (interactive "sSSH to host: ")
+  (let ((default-directory (my/current-dir)))
+    (my/open-shell-here)
+    (comint-send-string (get-buffer-process (current-buffer)) 
+                        (format "ssh -t %s\n" host))))
+
+;;==============================================================================
 ;; TMUX-STYLE KEYBINDINGS
 ;;==============================================================================
 
@@ -304,7 +391,7 @@ Falls back to consult-grep if ripgrep is not available."
     "fg" '(my/consult-find-current-dir :which-key "fuzzy find files")
     "fs" '(save-buffer :which-key "save file")
     "fr" '(recentf-open-files :which-key "recent files")
-    "fd" '(my/fzf-project-dirs :which-key "find directory (fzf)")
+    "fd" '(my/consult-project-dirs-windows :which-key "find directory (consult)")
     
     ;; Search
     "/" '(my/consult-ripgrep-current-dir :which-key "search text in current dir")
@@ -314,8 +401,9 @@ Falls back to consult-grep if ripgrep is not available."
     "s" '(ibuffer :which-key "list buffers")
     "x" '(kill-buffer :which-key "kill buffer")
     "c" '(find-file :which-key "new buffer/find file")
-    "t" '(my/open-eshell-here :which-key "terminal")
-    
+    "t"  '(:ignore t :which-key "terminal")
+    "te" '(my/open-eshell-here :which-key "eshell")
+    "tt" '(my/open-shell-here :which-key "shell")
     ;; Buffer navigation
     "b"  '(:ignore t :which-key "buffer")
     "bn" '(next-buffer :which-key "next buffer")
@@ -373,7 +461,7 @@ Falls back to consult-grep if ripgrep is not available."
   (general-define-key
    :states '(normal insert visual emacs)
    :keymaps 'global
-   "C-f" 'my/fzf-project-dirs))
+    "C-f" 'my/consult-project-dirs-windows))
 
 ;; Quick access bindings in normal mode (no prefix)
 (with-eval-after-load 'evil
@@ -559,5 +647,20 @@ Falls back to consult-grep if ripgrep is not available."
          ("\\.hpp\\'" . c++-mode))
   :config
   (setq c-basic-offset 4))
+
+;;==============================================================================
+;; WINDOWS SSH NOTES
+;;==============================================================================
+
+;; For SSH to work properly on Windows:
+;; 1. Install OpenSSH Client (Windows 10/11):
+;;    - Settings > Apps > Optional Features > Add Feature > OpenSSH Client
+;;    - Or PowerShell: `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`
+;; 2. SSH requires pseudo-terminal allocation on Windows:
+;;    - In eshell: Use `ssh host` (automatically adds -t flag via alias)
+;;    - In shell mode: Use `ssh -t host` (manual -t flag required)
+;;    - Or use `M-x my/ssh-windows` interactive function
+;; 3. For best results, use powershell.el terminal (C-SPC t t)
+;; 4. Consider using TRAMP for remote file editing instead of SSH shell
 
 ;;; init.el ends here
