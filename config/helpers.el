@@ -3,6 +3,8 @@
 ;;; Commentary:
 ;; Helper functions used throughout the configuration.
 
+(require 'shell)
+
 ;;==============================================================================
 ;; HELPER FUNCTIONS
 ;;==============================================================================
