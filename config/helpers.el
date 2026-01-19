@@ -159,18 +159,21 @@ creates README.md, and optionally creates GitHub repository using gh CLI."
    (t "/bin/bash")))
 
 (defun my/shell-args (shell-name)
-  "Return shell arguments for SHELL-NAME."
-  (cond
-   ((string-match "powershell\\.exe\\|pwsh" shell-name)
-    '("-NoExit" "-NoLogo" "-Command" "-"))
-   ((string-match "cmd\\.exe" shell-name)
-    '("/k"))
-   (t nil)))
+  "Return shell arguments for SHELL-NAME.
+SHELL-NAME can be a string or nil. Returns nil for unknown shells."
+  (when (stringp shell-name)
+    (cond
+     ((string-match "powershell\\.exe\\|pwsh" shell-name)
+      '("-NoExit" "-NoLogo" "-Command" "-"))
+     ((string-match "cmd\\.exe" shell-name)
+      '("/k"))
+     (t nil))))
 
 (defun my/configure-shell-mode ()
   "Configure shell mode for specific shell types.
 Sets comint variables for better PowerShell and general shell experience."
-  (when (derived-mode-p 'shell-mode)
+  (when (and (derived-mode-p 'shell-mode)
+             (stringp explicit-shell-file-name))
     (let ((shell-name (file-name-nondirectory explicit-shell-file-name)))
       (cond
        ((string-match "powershell\\.exe\\|pwsh" shell-name)
