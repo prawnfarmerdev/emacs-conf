@@ -206,6 +206,7 @@
 ;;==============================================================================
 
 ;; On Windows, vterm doesn't work well, so we use eshell or powershell instead
+;; Note: vterm is not installed in this configuration
 (defun my/open-terminal-here ()
   "Open terminal in current directory (eshell on Windows, vterm on Unix)."
   (interactive)
