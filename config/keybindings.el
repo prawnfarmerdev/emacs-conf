@@ -51,7 +51,9 @@
      "s" '(my/persp-switch-full :which-key "switch perspective (full screen)")
      "x" '(my/tab-line-close-current-tab :which-key "close tab / switch from read-only")
      "c" '(my/open-current-dir-dired :which-key "open file explorer (dired) in current dir")
-      "t" '(my/open-vterm-here :which-key "terminal (eshell)")
+      "t" '(:ignore t :which-key "terminal")
+        "te" '(my/open-eshell-here :which-key "eshell")
+        "tt" '(my/open-shell-here :which-key "shell")
      
      ;; Windows
     "w"  '(:ignore t :which-key "windows")
@@ -142,7 +144,9 @@
      "s" '(my/persp-switch-full :which-key "switch perspective (full screen)")
      "x" '(my/tab-line-close-current-tab :which-key "close tab / switch from read-only")
      "c" '(my/open-current-dir-dired :which-key "open file explorer (dired) in current dir")
-      "t" '(my/open-vterm-here :which-key "terminal (eshell)")
+      "t" '(:ignore t :which-key "terminal")
+        "te" '(my/open-eshell-here :which-key "eshell")
+        "tt" '(my/open-shell-here :which-key "shell")
      
      ;; Windows
     "w"  '(:ignore t :which-key "windows")
@@ -332,8 +336,7 @@
 
  ;; Quick access bindings in normal mode (no prefix)
  (with-eval-after-load 'evil
-   (define-key evil-normal-state-map (kbd "-") #'my/open-current-dir-dired)
-   (define-key evil-normal-state-map (kbd "t") #'my/open-vterm-here))
+    (define-key evil-normal-state-map (kbd "-") #'my/open-current-dir-dired))
 
 (provide 'keybindings)
 ;;; keybindings.el ends here
