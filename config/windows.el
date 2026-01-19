@@ -216,6 +216,31 @@ Uses powershell.el if available, otherwise configures cmd.exe for SSH."
   :if (eq system-type 'windows-nt))
 
 ;;==============================================================================
+;; EAT TERMINAL WINDOWS WORKAROUND
+;;==============================================================================
+
+;; Workaround for eat's hardcoded /usr/bin/env sh -c command on Windows
+(with-eval-after-load 'eat
+  (when (eq system-type 'windows-nt)
+    ;; Define advice function
+    (defun my/eat-exec-windows-advice (orig-fun buffer name command startfile switches)
+      "Adjust eat-exec arguments for Windows compatibility."
+      (if (string= command "/usr/bin/env")
+          ;; Replace Unix-style command with Windows shell
+          (let* ((shell (if (executable-find "powershell.exe")
+                            "powershell.exe"
+                          "cmd.exe"))
+                 (args (if (executable-find "powershell.exe")
+                           '("-NoExit" "-NoLogo" "-NoProfile")
+                         '("/k"))))
+            (funcall orig-fun buffer name shell startfile args))
+        ;; Otherwise call original
+        (funcall orig-fun buffer name command startfile switches)))
+    ;; Add advice only once
+    (unless (advice-member-p #'my/eat-exec-windows-advice 'eat-exec)
+      (advice-add 'eat-exec :around #'my/eat-exec-windows-advice)))))
+
+;;==============================================================================
 ;; INSTALLATION NOTES
 ;;==============================================================================
 

@@ -269,7 +269,8 @@ than shell-mode for SSH and interactive programs."
 ;;;###autoload
 (defun my/open-eat-here ()
   "Open eat (Emulated Advanced Terminal) in current buffer's directory.
-Eat is a terminal emulator with excellent Windows and SSH support."
+Eat is a terminal emulator with excellent Windows and SSH support.
+On Windows, provides proper shell arguments to avoid spawn errors."
   (interactive)
   (let ((default-directory (my/current-dir))
         (shell (cond
@@ -278,8 +279,26 @@ Eat is a terminal emulator with excellent Windows and SSH support."
                      "powershell.exe"
                    "cmd.exe"))
                 (t
-                 (or (executable-find "bash") "/bin/bash")))))
-    (eat shell)))
+                 (or (executable-find "bash") "/bin/bash"))))
+        (shell-args (cond
+                     ((eq system-type 'windows-nt)
+                      (if (executable-find "powershell.exe")
+                          '("-NoExit" "-NoLogo" "-NoProfile")
+                        '("/k")))
+                     (t
+                      nil))))
+    (condition-case err
+        (progn
+          ;; Ensure eat is loaded
+          (require 'eat nil t)
+          (if shell-args
+              ;; Use eat-make to pass shell arguments
+              (eat-make (generate-new-buffer-name "*eat*") shell nil shell-args)
+            ;; No arguments, use plain eat
+            (eat shell)))
+      (error
+       (message "eat failed: %s, falling back to ansi-term" (error-message-string err))
+       (my/open-ansi-term-here)))))
 
 ;; Configure eat for Windows SSH compatibility
 (defun my/configure-eat-mode-windows ()
@@ -292,7 +311,27 @@ Eat is a terminal emulator with excellent Windows and SSH support."
       (message "eat-mode: SSH should work without -t flag on Windows"))))
 
 (with-eval-after-load 'eat
-  (add-hook 'eat-mode-hook #'my/configure-eat-mode-windows))
+  (add-hook 'eat-mode-hook #'my/configure-eat-mode-windows)
+  
+  ;; Windows workaround for eat's hardcoded /usr/bin/env sh -c command
+  (when (eq system-type 'windows-nt)
+    ;; Define advice function
+    (defun my/eat-exec-windows-advice (orig-fun buffer name command startfile switches)
+      "Adjust eat-exec arguments for Windows compatibility."
+      (if (string= command "/usr/bin/env")
+          ;; Replace Unix-style command with Windows shell
+          (let* ((shell (if (executable-find "powershell.exe")
+                            "powershell.exe"
+                          "cmd.exe"))
+                 (args (if (executable-find "powershell.exe")
+                           '("-NoExit" "-NoLogo" "-NoProfile")
+                         '("/k"))))
+            (funcall orig-fun buffer name shell startfile args))
+        ;; Otherwise call original
+        (funcall orig-fun buffer name command startfile switches)))
+    ;; Add advice only once
+    (unless (advice-member-p #'my/eat-exec-windows-advice 'eat-exec)
+      (advice-add 'eat-exec :around #'my/eat-exec-windows-advice))))
 
 ;;==============================================================================
 ;; UNIFIED TERMINAL FUNCTION
