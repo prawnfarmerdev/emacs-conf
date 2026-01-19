@@ -166,7 +166,7 @@ SHELL-NAME can be a string or nil. Returns nil for unknown shells."
   (when (stringp shell-name)
     (cond
      ((string-match "powershell\\.exe\\|pwsh" shell-name)
-      '("-NoExit" "-NoLogo" "-Command" "-"))
+      '("-NoExit" "-NoLogo" "-NoProfile" "-Command" "-"))
      ((string-match "cmd\\.exe" shell-name)
       '("/k"))
      (t nil))))
@@ -174,24 +174,27 @@ SHELL-NAME can be a string or nil. Returns nil for unknown shells."
 (defun my/configure-shell-mode ()
   "Configure shell mode for specific shell types.
 Sets comint variables for better PowerShell and general shell experience."
-  (when (and (derived-mode-p 'shell-mode)
-             (stringp explicit-shell-file-name))
-    (let ((shell-name (file-name-nondirectory explicit-shell-file-name)))
-      (cond
-       ((string-match "powershell\\.exe\\|pwsh" shell-name)
-        ;; PowerShell specific settings
-        (setq-local comint-process-echoes t)
-        (setq-local comint-use-prompt-regexp t)
-        (setq-local comint-prompt-regexp "^PS.*> "))
-       ((string-match "cmd\\.exe" shell-name)
-        ;; cmd.exe settings
-        (setq-local comint-process-echoes t)
-        (setq-local comint-use-prompt-regexp t)
-        (setq-local comint-prompt-regexp "^[A-Z]:\\.*?> "))
-       (t
-        ;; Unix shell defaults
-        (setq-local comint-process-echoes nil)
-        (setq-local comint-use-prompt-regexp nil))))))
+  (when (derived-mode-p 'shell-mode)
+    ;; Skip configuration for PowerShell buffers created by powershell.el
+    ;; as they have their own configuration
+    (unless (string-match "\\*PowerShell\\*" (buffer-name))
+      (when (stringp explicit-shell-file-name)
+        (let ((shell-name (file-name-nondirectory explicit-shell-file-name)))
+          (cond
+           ((string-match "powershell\\.exe\\|pwsh" shell-name)
+            ;; PowerShell specific settings
+            (setq-local comint-process-echoes nil)  ; PowerShell echoes its own prompt
+            (setq-local comint-use-prompt-regexp t)
+            (setq-local comint-prompt-regexp "^PS.*> "))
+           ((string-match "cmd\\.exe" shell-name)
+            ;; cmd.exe settings
+            (setq-local comint-process-echoes t)
+            (setq-local comint-use-prompt-regexp t)
+            (setq-local comint-prompt-regexp "^[A-Z]:\\.*?> "))
+           (t
+            ;; Unix shell defaults
+            (setq-local comint-process-echoes nil)
+            (setq-local comint-use-prompt-regexp nil))))))))
 
 ;; Run configuration when shell mode starts
 (with-eval-after-load 'shell
@@ -200,13 +203,31 @@ Sets comint variables for better PowerShell and general shell experience."
 ;;;###autoload
 (defun my/open-shell-here ()
   "Open shell in current buffer's directory with PowerShell detection.
-On Windows, uses powershell.exe. On Linux/macOS, uses pwsh if available,
-otherwise falls back to bash."
+On Windows, uses powershell.el if available, otherwise powershell.exe.
+On Linux/macOS, uses pwsh if available, otherwise falls back to bash."
   (interactive)
-  (let ((default-directory (my/current-dir))
-        (explicit-shell-file-name (my/detect-shell))
-        (explicit-shell-args (my/shell-args explicit-shell-file-name)))
-    (shell)))
+  (let ((default-directory (my/current-dir)))
+    (cond
+     ;; Use powershell.el function if available and on Windows
+     ((memq system-type '(windows-nt ms-dos cygwin))
+      (condition-case err
+          (progn
+            ;; Try to load powershell.el if not already loaded
+            (unless (fboundp 'powershell)
+              (require 'powershell))
+            (powershell))
+        (error
+         ;; Fall back to generic shell if powershell.el fails
+         (message "powershell.el failed: %s, falling back to generic shell" 
+                  (error-message-string err))
+         (let ((explicit-shell-file-name (my/detect-shell))
+               (explicit-shell-args (my/shell-args explicit-shell-file-name)))
+           (shell)))))
+     ;; Otherwise use generic shell with detected shell
+     (t
+      (let ((explicit-shell-file-name (my/detect-shell))
+            (explicit-shell-args (my/shell-args explicit-shell-file-name)))
+        (shell))))))
 
 (provide 'helpers)
 ;;; helpers.el ends here
