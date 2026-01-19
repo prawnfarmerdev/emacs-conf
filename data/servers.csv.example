@@ -1,10 +1,16 @@
 # Server inventory CSV file for SSH sessionizer
-# Format: hostname,username
+# Format: hostname,name,username (name optional, can be empty)
+# Also supports 2-column format: hostname,username
 # Place this file at ~/.emacs.d/data/servers.csv
-# Or configure my/ssh-server-csv-file variable
+# Or configure my/ssh-csv-file variable
 
 # Example servers (replace with your own)
-example.com,admin
-server-1.internal,ubuntu
-192.168.1.100,root
-localhost,${USER}
+# With display names:
+example.com,Production Web Server,admin
+server-1.internal,Development Server,ubuntu
+192.168.1.100,Home Router,root
+localhost,Local Machine,${USER}
+
+# Without display names (just hostname and username):
+db.internal,,postgres
+10.0.0.5,,admin

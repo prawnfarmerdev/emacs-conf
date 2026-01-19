@@ -9,7 +9,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 - **Cross-platform**: Linux and Windows support with platform-specific overrides
 - **Terminal support**: eshell (cross-platform) and eat (excellent Windows SSH support)
 - **Fuzzy search**: Consult-based navigation (replaces FZF), vertico completion
-- **SSH sessionizer**: Connect to servers from CSV inventory with perspective management
+- **SSH sessionizer**: Connect to servers from SSH config with perspective management
 - **GitHub integration**: Quick PR creation, project initialization with gh CLI
 - **Solarized theme**: Dark theme with pure black background
 - **Custom mode-line**: Enhanced visibility with Solarized theme
@@ -18,7 +18,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 
 ### Global Bindings (no prefix)
 - **C-f**: Directory sessionizer (switch/create perspective)
-- **C-S-f**: SSH sessionizer (connect to server from CSV)
+- **C-S-f** (or **C-c C-s**): SSH sessionizer (connect to server from SSH config)
 - **C-S-p**: Open GitHub PR for current branch
 - **C-n**: Create new project with git & GitHub setup
 
@@ -53,7 +53,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
   - `languages.el` - Programming language modes
   - `windows.el` - Windows-specific overrides (loaded conditionally)
 - `data/` - Data files (not tracked in git)
-  - `servers.csv.example` - Legacy example (SSH sessionizer now uses `~/.ssh/config`)
+  -   `servers.csv.example` - Example CSV file for SSH sessionizer (optional primary source)
 
 ## Installation
 
@@ -73,14 +73,20 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 ## Additional Setup
 
 ### SSH Sessionizer
-1. Uses standard SSH config file: `~/.ssh/config` (automatically created with template if missing)
-2. Format: Standard SSH config syntax with `Host`, `HostName`, `User` directives
-3. Use `C-S-f` to connect to servers
+1. **Primary source**: CSV file `~/.emacs.d/data/servers.csv` (optional, easier management)
+   - CSV format: `hostname,name,username` (name optional, can be empty)
+   - Also supports 2-column format: `hostname,username`
+   - If CSV file doesn't exist, falls back to SSH config parsing
+2. **SSH config file**: `~/.ssh/config` (automatically created with template if missing)
+   - Standard SSH config syntax with `Host`, `HostName`, `User` directives
+   - SSH config entries are generated on-demand when selecting servers from CSV
+3. Use `C-S-f` (or `C-c C-s`) to connect to servers
 4. Creates perspectives named after servers for workspace isolation
 5. **TRAMP integration** (default): Opens remote directory via TRAMP (`/ssh:user@hostname:`)
    - Configure: `(setq my/ssh-use-tramp t)` (default) for TRAMP, `nil` for eshell SSH
    - Modes: `my/ssh-tramp-mode`: `'dired` (file browser) or `'shell` (remote shell)
 6. **MFA support**: Configure authentication methods in SSH config (e.g., `PreferredAuthentications publickey,keyboard-interactive`)
+7. **SSH key management**: Automatically detects existing SSH keys; generates new key if none exists (configurable)
 
 ### GitHub CLI (gh)
 1. Install GitHub CLI: https://cli.github.com/

@@ -12,11 +12,12 @@
   :ensure t
   :demand t
   :config
+  (setq general-warn-on-override nil)
   
   ;; NORMAL/VISUAL MODE (C-SPC leader) - Vim-style with Ctrl+Space
   ;; Use 'global instead of 'override for better compatibility
   ;; Unbind C-SPC from set-mark-command to use as leader
-  (general-unbind "C-SPC")
+  (global-unset-key (kbd "C-SPC"))
   (general-define-key
    :states '(normal insert visual emacs)
    :keymaps 'global
@@ -294,10 +295,15 @@
     
     ;; C-S-f for SSH sessionizer (global) - evil states  
     (when (fboundp 'my/ssh-sessionizer)
-      (general-define-key
-       :states '(normal insert visual emacs)
-       :keymaps 'global
-       "C-S-f" 'my/ssh-sessionizer))
+      (condition-case nil
+          (general-define-key
+           :states '(normal insert visual emacs)
+           :keymaps 'global
+           "C-S-f" 'my/ssh-sessionizer
+           "C-c C-s" 'my/ssh-sessionizer)
+        (error nil))
+      ;; Note: C-S-f may be captured by terminal emulators; alternative binding C-c C-s
+      )
     
     ;; C-S-p for GitHub PR (global) - evil states
     (when (fboundp 'my/open-github-pr)
@@ -319,9 +325,14 @@
     
     ;; C-S-f for SSH sessionizer (global) - global
     (when (fboundp 'my/ssh-sessionizer)
-      (general-define-key
-       :keymaps 'global
-       "C-S-f" 'my/ssh-sessionizer))
+      (condition-case nil
+          (general-define-key
+           :keymaps 'global
+           "C-S-f" 'my/ssh-sessionizer
+           "C-c C-s" 'my/ssh-sessionizer)
+        (error nil))
+      ;; Note: C-S-f may be captured by terminal emulators; alternative binding C-c C-s
+      )
     
     ;; C-S-p for GitHub PR (global) - global
     (when (fboundp 'my/open-github-pr)

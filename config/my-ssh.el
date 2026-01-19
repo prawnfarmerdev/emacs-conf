@@ -2,11 +2,20 @@
 
 ;;; Commentary:
 ;; SSH sessionizer functionality that:
-;; 1. Reads server inventory from SSH config file (~/.ssh/config)
-;; 2. Provides interactive server selection using Consult
+;; 1. Reads server inventory from CSV file (~/.emacs.d/data/servers.csv) as primary source
+;; 2. Provides interactive server selection using Consult with display names
 ;; 3. Creates a perspective named after the selected server
 ;; 4. Opens TRAMP connection (dired and/or shell)
-;; 5. Supports MFA configuration via SSH config options
+;; 5. Generates SSH config entries on-demand with key management
+;; 6. Supports MFA configuration via SSH config options
+;; 
+;; CSV format: hostname,name,username  (name optional, can be empty)
+;; - hostname: Server hostname or IP address (required)
+;; - name: Display name for easier searching in selection (optional, can be empty)
+;; - username: SSH username for the server (required)
+;; Also supports 2-column format: hostname,username
+;; 
+;; If CSV file doesn't exist, falls back to SSH config file parsing.
 
 ;;==============================================================================
 ;; CONFIGURATION VARIABLES
@@ -27,12 +36,35 @@ If file doesn't exist, it will be created with a template.")
   "If non-nil, use TRAMP for remote connections instead of eshell SSH.
 TRAMP provides better integration with Emacs buffers and files.")
 
-(defvar my/ssh-tramp-mode 'dired-and-terminal
+ (defvar my/ssh-tramp-mode 'dired-and-terminal
   "TRAMP connection mode: `dired', `shell', or `dired-and-terminal'.
 When `my/ssh-use-tramp' is non-nil, determines what to open:
 - `dired': Open dired on remote home directory
 - `shell': Open shell buffer connected via TRAMP
 - `dired-and-terminal': Open dired then a terminal with same TRAMP path")
+
+(defvar my/ssh-csv-file (expand-file-name "~/.emacs.d/data/servers.csv")
+  "Path to CSV file containing server inventory.
+CSV format: hostname,name,username (name optional, can be empty)
+- hostname: Server hostname or IP address (required)
+- name: Display name for selection (optional, can be empty)
+- username: SSH username for the server (required)
+Also supports 2-column format: hostname,username
+If file doesn't exist, CSV parsing will be skipped.")
+
+(defvar my/ssh-default-key nil
+  "Default SSH private key path (e.g., ~/.ssh/id_rsa).
+If nil, automatically detect existing keys or generate new one.")
+
+(defvar my/ssh-auto-generate-key t
+  "If non-nil, generate SSH key pair if none exists.
+Only applies when `my/ssh-default-key' is nil and no keys found.")
+
+(defvar my/ssh-csv-as-primary-source t
+  "If non-nil, use CSV file as primary server source.
+If CSV file exists, servers will be read from CSV and SSH config
+entries will be generated on-demand when servers are selected.
+If CSV file doesn't exist, fall back to SSH config parsing.")
 
 ;;==============================================================================
 ;; SSH CONFIG PARSING
@@ -122,18 +154,171 @@ The _CONFIG-FILE argument is ignored; uses `my/ssh-config-file' variable."
           (nreverse servers))))))
 
 ;;==============================================================================
+;; CSV PARSING AND KEY MANAGEMENT
+;;==============================================================================
+(defun my/ssh-parse-csv-file (csv-file)
+  "Parse CSV file and return alist of (display . (hostname . username)).
+CSV format: hostname,name,username (name optional, can be empty)
+Also supports 2-column format: hostname,username
+Lines starting with # are ignored.
+Returns empty list if file doesn't exist or no valid entries."
+  (when (file-exists-p csv-file)
+    (with-temp-buffer
+      (insert-file-contents csv-file)
+      (goto-char (point-min))
+      (let (servers)
+        (while (not (eobp))
+          (let* ((raw-line (buffer-substring (line-beginning-position) (line-end-position)))
+                 (line (string-trim raw-line)))
+            (unless (or (string-empty-p line)
+                        (string-prefix-p "#" line))
+              (let* ((parts (split-string line "," nil))  ; keep empty columns
+                     (nparts (length parts)))
+                (cond
+                 ((>= nparts 3)
+                  (let* ((hostname (string-trim (nth 0 parts)))
+                         (name (string-trim (nth 1 parts)))
+                         (username (string-trim (nth 2 parts))))
+                    (when (and (not (string-empty-p hostname))
+                               (not (string-empty-p username)))
+                      (let ((display (if (string-empty-p name)
+                                         hostname
+                                       (format "%s (%s)" name hostname))))
+                        (push (cons display
+                                    (cons hostname username))
+                              servers)))))
+                 ((= nparts 2)
+                  (let* ((hostname (string-trim (nth 0 parts)))
+                         (username (string-trim (nth 1 parts))))
+                    (when (and (not (string-empty-p hostname))
+                               (not (string-empty-p username)))
+                      (push (cons hostname
+                                  (cons hostname username))
+                            servers))))
+                 (t nil)))))  ; ignore lines with <2 columns
+          (forward-line 1))
+        (nreverse servers)))))
+
+(defun my/ssh-find-ssh-keys ()
+  "Find existing SSH private keys in ~/.ssh/.
+Returns list of key paths (without .pub extension)."
+  (let ((ssh-dir (expand-file-name "~/.ssh/"))
+        (keys ()))
+    (when (file-exists-p ssh-dir)
+      (dolist (file (directory-files ssh-dir t))
+        (when (and (not (file-directory-p file))
+                   (string-match "\\.pub$" file))
+          (let ((priv-key (replace-regexp-in-string "\\.pub$" "" file)))
+            (when (file-exists-p priv-key)
+              (push priv-key keys))))))
+    keys))
+
+(defun my/ssh-ensure-ssh-key ()
+  "Ensure an SSH key exists, return private key path.
+If `my/ssh-default-key' is non-nil, use that.
+Otherwise, check for existing keys, or generate new one if `my/ssh-auto-generate-key'."
+  (cond
+   (my/ssh-default-key
+    (expand-file-name my/ssh-default-key))
+   (t
+    (let ((keys (my/ssh-find-ssh-keys)))
+      (cond
+       (keys
+        (car keys))  ; Use first found key
+       (my/ssh-auto-generate-key
+        (my/ssh-generate-key))  ; TODO: implement key generation
+       (t
+        nil))))))
+
+(defun my/ssh-generate-key ()
+  "Generate SSH key pair.
+Returns private key path.
+Generates RSA 4096 key in ~/.ssh/. If id_rsa already exists,
+generates id_rsa_emacs instead."
+  (let* ((key-dir (expand-file-name "~/.ssh/"))
+         (base-name "id_rsa")
+         (priv-key (expand-file-name base-name key-dir))
+         (attempt 0)
+         (max-attempts 5))
+    (unless (file-exists-p key-dir)
+      (make-directory key-dir t))
+    ;; Find available key name
+    (while (and (file-exists-p priv-key) (< attempt max-attempts))
+      (setq attempt (1+ attempt))
+      (setq base-name (format "id_rsa_emacs%s" (if (> attempt 1) (format "_%d" attempt) "")))
+      (setq priv-key (expand-file-name base-name key-dir)))
+    (when (file-exists-p priv-key)
+      (error "SSH key generation failed: all candidate key names exist in %s" key-dir))
+    ;; Generate key using ssh-keygen
+    (message "Generating SSH key %s..." priv-key)
+    (call-process "ssh-keygen" nil nil nil "-t" "rsa" "-b" "4096" "-f" priv-key "-N" "")
+    (if (file-exists-p priv-key)
+        (progn
+          (message "SSH key generated: %s" priv-key)
+          priv-key)
+      (error "SSH key generation failed"))))
+
+(defun my/ssh-config-has-host? (hostname)
+  "Check if SSH config already has entry for HOSTNAME."
+  (let ((config-file (my/ssh-ensure-config-file)))
+    (when (file-exists-p config-file)
+      (with-temp-buffer
+        (insert-file-contents config-file)
+        (goto-char (point-min))
+        (re-search-forward (format "^Host\\s-+%s\\(\\s-\\|$\\)" (regexp-quote hostname)) nil t)))))
+
+(defun my/ssh-add-config-entry (hostname username &optional key-path)
+  "Add SSH config entry for HOSTNAME with USERNAME and optional KEY-PATH.
+Appends to config file."
+  (let ((config-file (my/ssh-ensure-config-file))
+        (entry (format "\nHost %s\n    HostName %s\n    User %s%s\n"
+                       hostname hostname username
+                       (if key-path (format "\n    IdentityFile %s" key-path) ""))))
+    (with-temp-buffer
+      (when (file-exists-p config-file)
+        (insert-file-contents config-file))
+      (goto-char (point-max))
+      ;; Ensure we end with newline
+      (unless (bolp) (insert "\n"))
+      (insert entry)
+      (write-region (point-min) (point-max) config-file))))
+
+
+;;==============================================================================
 ;; SERVER SELECTION WITH CONSULT
 ;;==============================================================================
 
 (defun my/ssh-select-server ()
-  "Interactively select a server from SSH config using Consult.
+  "Interactively select a server from CSV or SSH config using Consult.
 Return (hostname . username) cons cell.
-If no servers found, prompts to edit config file."
+Primary source is CSV file if `my/ssh-csv-as-primary-source' is non-nil
+and CSV file exists. Otherwise uses SSH config file.
+If CSV is used, ensures SSH config entries exist (generates if missing)."
   (interactive)
-  (require 'consult)  ; Ensure consult is loaded before using consult--read
-  (let* ((servers (my/ssh-parse-config-file my/ssh-config-file))
+  (require 'consult)
+  (let* ((csv-file my/ssh-csv-file)
+         (use-csv (and my/ssh-csv-as-primary-source
+                       (file-exists-p csv-file)))
+         (servers
+          (if use-csv
+              ;; Parse CSV and ensure SSH config entries
+              (let ((csv-servers (my/ssh-parse-csv-file csv-file)))
+                (when csv-servers
+                  (let ((key-path (my/ssh-ensure-ssh-key)))
+                    (dolist (server csv-servers)
+                      (let ((hostname (car (cdr server)))
+                            (username (cdr (cdr server))))
+                        (unless (my/ssh-config-has-host? hostname)
+                          (my/ssh-add-config-entry hostname username key-path))))))
+                csv-servers)
+            ;; Fall back to SSH config parsing
+            (my/ssh-parse-config-file my/ssh-config-file)))
          (choices (mapcar (lambda (server)
-                            (format "%s (%s)" (car server) (cdr server)))
+                            ;; server is either (display . (hostname . username)) from CSV
+                            ;; or (hostname . username) from SSH config
+                            (if (consp (cdr server))  ; CSV format
+                                (car server)          ; display name already formatted
+                              (format "%s (%s)" (car server) (cdr server))))
                           servers)))
     (cond
      (servers
@@ -144,17 +329,23 @@ If no servers found, prompts to edit config file."
                                      :category 'string
                                      :history 'my/ssh-history)))
         (when selected
-          ;; Extract hostname from formatted string "hostname (username)"
-          (let* ((hostname (car (split-string selected " (" t)))
-                 (username (substring (cadr (split-string selected "(" t)) 0 -1)))
-            (cons hostname username)))))
+          ;; Extract hostname and username based on source
+          (if use-csv
+              ;; Find the server entry in CSV list
+              (let ((server (assoc selected servers)))
+                (when server
+                  (cdr server)))  ; returns (hostname . username)
+            ;; SSH config format
+            (let* ((hostname (car (split-string selected " (" t)))
+                   (username (substring (cadr (split-string selected "(" t)) 0 -1)))
+              (cons hostname username))))))
      (t
       ;; No servers found
-      (message "No SSH hosts found in %s" my/ssh-config-file)
-      (when (y-or-n-p (format "No SSH hosts configured. Edit %s? " my/ssh-config-file))
-        (find-file my/ssh-config-file))
+      (message "No SSH hosts found in %s" (if use-csv csv-file my/ssh-config-file))
+      (when (y-or-n-p (format "No SSH hosts configured. Edit %s? "
+                              (if use-csv csv-file my/ssh-config-file)))
+        (find-file (if use-csv csv-file my/ssh-config-file)))
       nil))))
-
 ;;==============================================================================
 ;; PERSPECTIVE INTEGRATION
 ;;==============================================================================
