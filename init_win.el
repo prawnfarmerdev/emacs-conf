@@ -472,7 +472,6 @@ Falls back to consult-grep if ripgrep is not available."
     "t"  '(:ignore t :which-key "terminal")
     "te" '(my/open-eshell-here :which-key "eshell")
     "tt" '(my/open-eat-eshell-here :which-key "eat eshell")
-    "tv" '(my/open-vterm-here :which-key "vterm")
     ;; Buffer navigation
     "b"  '(:ignore t :which-key "buffer")
     "bn" '(next-buffer :which-key "next buffer")

@@ -60,7 +60,6 @@ Windows configuration is loaded conditionally when `my/is-windows` is true.
 - **Search**: `C-SPC /` regexp search, `C-SPC R` toggle regexp/fixed
 - **Enhanced eshell**: `C-SPC t e` opens enhanced eshell with git prompt, fish completion, syntax highlighting, aliases, and persistent history
 - **Eat-eshell terminal**: `C-SPC t t` opens eat-eshell (eat terminal emulation within eshell) with excellent Windows SSH support and pseudo-terminal emulation
-- **Vterm terminal**: `C-SPC t v` opens vterm (fast terminal emulator, Unix/Linux only)
 - **Tabs**: Numbered tab-line showing perspective-filtered file buffers (`C-SPC 1-9`)
 - **Fuzzy finder**: `C-f` directory selection with perspective creation
 - **File operations**: `C-SPC f` prefix for file/directory operations
