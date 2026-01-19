@@ -54,6 +54,7 @@
       "t" '(:ignore t :which-key "terminal")
         "te" '(my/open-eshell-here :which-key "eshell")
         "tt" '(my/open-eat-eshell-here :which-key "eat eshell")
+        "tv" '(my/open-vterm-here :which-key "vterm")
      
      ;; Windows
     "w"  '(:ignore t :which-key "windows")
@@ -147,6 +148,7 @@
       "t" '(:ignore t :which-key "terminal")
         "te" '(my/open-eshell-here :which-key "eshell")
         "tt" '(my/open-eat-eshell-here :which-key "eat eshell")
+        "tv" '(my/open-vterm-here :which-key "vterm")
      
      ;; Windows
     "w"  '(:ignore t :which-key "windows")

@@ -318,6 +318,19 @@ for Windows SSH support."
       ;; If eat is not available, fall back to regular eshell
       (message "eat package not available, using regular eshell")
       (eshell t))))
+ 
+;;;###autoload
+(defun my/open-vterm-here ()
+  "Open vterm (modern terminal emulator) in current buffer's directory.
+Vterm is fast and feature-rich but only works on Unix/Linux systems.
+On Windows, falls back to best available terminal."
+  (interactive)
+  (let ((default-directory (my/current-dir)))
+    (if (and (not (eq system-type 'windows-nt))
+             (fboundp 'vterm))
+        (vterm)
+      (message "vterm not available on Windows or not installed")
+      (my/open-best-terminal-here))))
 
 ;; Configure eat for Windows SSH compatibility
 (defun my/configure-eat-mode-windows ()

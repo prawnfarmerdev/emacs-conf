@@ -27,6 +27,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 - **C-SPC R**: Toggle regex/fixed string search
 - **C-SPC t e**: Open eshell terminal
 - **C-SPC t t**: Open eat-eshell terminal (eat terminal emulation within eshell, recommended for Windows SSH)
+- **C-SPC t v**: Open vterm terminal (fast terminal emulator, Unix/Linux only)
 - **C-SPC s**: Switch perspective (full screen)
 - **C-SPC b**: Buffer management
 - **C-SPC w**: Window management (split, close, navigate)
@@ -87,6 +88,10 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 2. Authenticate: `gh auth login`
 3. Use `C-S-p` to open PR for current branch
 4. Use `C-n` to create new projects with automatic GitHub repo creation
+ 
+## Optional Packages
+
+- **vterm**: Fast terminal emulator (Unix/Linux only). Install with `M-x package-install RET vterm RET`. The binding `C-SPC t v` will use vterm if available, otherwise falls back to best terminal.
 
 ## Platform Support
 
