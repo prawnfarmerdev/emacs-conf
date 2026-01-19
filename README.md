@@ -53,7 +53,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
   - `languages.el` - Programming language modes
   - `windows.el` - Windows-specific overrides (loaded conditionally)
 - `data/` - Data files (not tracked in git)
-  - `servers.csv.example` - Example server inventory for SSH sessionizer
+  - `servers.csv.example` - Legacy example (SSH sessionizer now uses `~/.ssh/config`)
 
 ## Installation
 
@@ -73,14 +73,14 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 ## Additional Setup
 
 ### SSH Sessionizer
-1. Create server inventory file: `~/.emacs.d/data/servers.csv`
-2. Format: `hostname,username` (one per line, header optional)
+1. Uses standard SSH config file: `~/.ssh/config` (automatically created with template if missing)
+2. Format: Standard SSH config syntax with `Host`, `HostName`, `User` directives
 3. Use `C-S-f` to connect to servers
 4. Creates perspectives named after servers for workspace isolation
 5. **TRAMP integration** (default): Opens remote directory via TRAMP (`/ssh:user@hostname:`)
    - Configure: `(setq my/ssh-use-tramp t)` (default) for TRAMP, `nil` for eshell SSH
    - Modes: `my/ssh-tramp-mode`: `'dired` (file browser) or `'shell` (remote shell)
-6. **SSH key management**: Prompts to copy SSH key if not configured (configurable via `my/ssh-prompt-for-key-copy`)
+6. **MFA support**: Configure authentication methods in SSH config (e.g., `PreferredAuthentications publickey,keyboard-interactive`)
 
 ### GitHub CLI (gh)
 1. Install GitHub CLI: https://cli.github.com/
