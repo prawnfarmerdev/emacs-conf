@@ -300,6 +300,25 @@ On Windows, provides proper shell arguments to avoid spawn errors."
        (message "eat failed: %s, falling back to ansi-term" (error-message-string err))
        (my/open-ansi-term-here)))))
 
+;;;###autoload
+(defun my/open-eat-eshell-here ()
+  "Open eshell with eat terminal emulation enabled.
+This provides excellent terminal emulation within eshell, especially
+for Windows SSH support."
+  (interactive)
+  (let ((default-directory (my/current-dir)))
+    ;; Ensure eat is loaded
+    (if (require 'eat nil t)
+        (progn
+          ;; Enable eat-eshell-mode globally if not already enabled
+          (unless (and (boundp 'eat-eshell-mode) eat-eshell-mode)
+            (eat-eshell-mode 1))
+          ;; Open eshell
+          (eshell t))
+      ;; If eat is not available, fall back to regular eshell
+      (message "eat package not available, using regular eshell")
+      (eshell t))))
+
 ;; Configure eat for Windows SSH compatibility
 (defun my/configure-eat-mode-windows ()
   "Configure eat-mode for Windows SSH compatibility."

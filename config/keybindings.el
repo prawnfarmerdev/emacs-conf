@@ -53,7 +53,7 @@
      "c" '(my/open-current-dir-dired :which-key "open file explorer (dired) in current dir")
       "t" '(:ignore t :which-key "terminal")
         "te" '(my/open-eshell-here :which-key "eshell")
-        "tt" '(my/open-eat-here :which-key "eat")
+        "tt" '(my/open-eat-eshell-here :which-key "eat eshell")
      
      ;; Windows
     "w"  '(:ignore t :which-key "windows")
@@ -146,7 +146,7 @@
      "c" '(my/open-current-dir-dired :which-key "open file explorer (dired) in current dir")
       "t" '(:ignore t :which-key "terminal")
         "te" '(my/open-eshell-here :which-key "eshell")
-        "tt" '(my/open-eat-here :which-key "eat")
+        "tt" '(my/open-eat-eshell-here :which-key "eat eshell")
      
      ;; Windows
     "w"  '(:ignore t :which-key "windows")

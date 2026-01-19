@@ -26,7 +26,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 - **C-SPC /**: Search text in current directory
 - **C-SPC R**: Toggle regex/fixed string search
 - **C-SPC t e**: Open eshell terminal
-- **C-SPC t t**: Open eat terminal (recommended for Windows SSH)
+- **C-SPC t t**: Open eat-eshell terminal (eat terminal emulation within eshell, recommended for Windows SSH)
 - **C-SPC s**: Switch perspective (full screen)
 - **C-SPC b**: Buffer management
 - **C-SPC w**: Window management (split, close, navigate)
@@ -95,7 +95,7 @@ Modular Emacs configuration with Tmux/Vim-style keybindings.
 
 ## Notes
 
-- Terminals: eshell (shell shortcuts) and eat (advanced terminal emulation)
+- Terminals: eshell (shell shortcuts) and eat-eshell (eat terminal emulation within eshell)
 - Evil mode is disabled in eshell buffers for shell compatibility
 - Pure black background for terminal buffers
 - Startup optimized with garbage collection tuning

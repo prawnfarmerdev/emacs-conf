@@ -471,7 +471,7 @@ Falls back to consult-grep if ripgrep is not available."
     "c" '(find-file :which-key "new buffer/find file")
     "t"  '(:ignore t :which-key "terminal")
     "te" '(my/open-eshell-here :which-key "eshell")
-    "tt" '(my/open-eat-here :which-key "eat")
+    "tt" '(my/open-eat-eshell-here :which-key "eat eshell")
     ;; Buffer navigation
     "b"  '(:ignore t :which-key "buffer")
     "bn" '(next-buffer :which-key "next buffer")
@@ -728,7 +728,7 @@ Falls back to consult-grep if ripgrep is not available."
 ;;    - In eshell: Use `ssh host` (automatically adds -t flag via alias)
 ;;    - In shell mode: Use `ssh -t host` (manual -t flag required)
 ;;    - Or use `M-x my/ssh-windows` interactive function
-;; 3. For best results, use eat terminal (C-SPC t t) for excellent SSH support
+;; 3. For best results, use eat-eshell terminal (C-SPC t t) for excellent SSH support
 ;; 4. Alternative: powershell.el terminal or eshell with auto -t flag
 ;; 5. Consider using TRAMP for remote file editing instead of SSH shell
 
