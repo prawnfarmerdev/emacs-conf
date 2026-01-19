@@ -1,278 +1,259 @@
-;;; core.el --- Core Emacs configuration (package management, UI, editor behavior, fonts) -*- lexical-binding: t -*-
+;;; core.el --- Core settings for terminal testing -*- lexical-binding: t -*-
 
 ;;; Commentary:
-;; Core configuration including package management, UI settings, editor behavior,
-;; font configuration, and platform detection.
+;; Basic Emacs configuration with focus on fixing "child process invalid argument"
+;; and Windows compatibility.
+
+;; Platform detection (fallback if not defined by init.el)
+(unless (boundp 'my/is-windows)
+  (defvar my/is-windows (eq system-type 'windows-nt)
+    "Non-nil if running on Windows."))
 
 ;;==============================================================================
-;; PLATFORM DETECTION
+;; BASIC SETTINGS
 ;;==============================================================================
 
-(defvar my/is-windows (memq system-type '(windows-nt ms-dos cygwin))
-  "Non-nil if running on Windows.")
+;; Disable startup screen
+(setq inhibit-startup-screen t)
+(setq initial-scratch-message nil)
 
-(defvar my/is-linux (eq system-type 'gnu/linux)
-  "Non-nil if running on Linux.")
+;; UI cleanup
+(menu-bar-mode -1)
+(tool-bar-mode -1) 
+(scroll-bar-mode -1)
 
-(defvar my/is-mac (eq system-type 'darwin)
-  "Non-nil if running on macOS.")
+;; Better defaults
+(setq-default cursor-type 'bar)
+(blink-cursor-mode 0)
+(setq visible-bell t)
+(setq ring-bell-function 'ignore)
 
-;;==============================================================================
-;; STARTUP OPTIMIZATION
-;;==============================================================================
+;; Line numbers
+(global-display-line-numbers-mode t)
+(setq display-line-numbers-type 'relative)
 
-;; Increase GC threshold during startup to reduce garbage collection pauses
-(defvar my/default-gc-cons-threshold gc-cons-threshold)
-(defvar my/default-gc-cons-percentage gc-cons-percentage)
-(setq gc-cons-threshold (* 128 1024 1024))  ; 128MB
-(setq gc-cons-percentage 0.6)
-
-;; Reset GC after startup
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (setq gc-cons-threshold my/default-gc-cons-threshold
-                  gc-cons-percentage my/default-gc-cons-percentage)
-            (message "GC thresholds reset to defaults")))
+;; Font
+(when (display-graphic-p)
+  (set-face-attribute 'default nil :family "Consolas" :height 110))
 
 ;;==============================================================================
 ;; PACKAGE MANAGEMENT
 ;;==============================================================================
 
-;; Disable automatic package refresh to avoid network errors
-(setq package-check-signature nil)
-(setq package-quickstart t)
+;; Update package list if needed
+(when (boundp 'package-archive-contents)
+  (unless package-archive-contents
+    (package-refresh-contents)))
 
-(require 'package)
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                          ("melpa-mirror" . "https://www.mirrorservice.org/sites/melpa.org/packages/")
-                          ("gnu" . "https://elpa.gnu.org/packages/")
-                          ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+;; Essential packages for terminal testing
+(defvar my/essential-packages
+  '(evil
+    general
+    which-key
+    vertico
+    orderless
+    consult
+    embark
+    marginalia
+    perspective
+    magit
+    eat)
+  "Essential packages for terminal testing.")
 
-;; Initialize package system (called automatically by Emacs 27+, but call early for use-package)
-(package-initialize)
-
-;; Auto-install missing packages from package-selected-packages
-(defun my/ensure-packages-installed ()
-  "Ensure all packages in `package-selected-packages` are installed."
-  (when (boundp 'package-selected-packages)
-    ;; Refresh package contents if needed
-    (unless package-archive-contents
-      (package-refresh-contents))
-    
-    ;; Install each missing package
-    (dolist (pkg package-selected-packages)
-      (unless (package-installed-p pkg)
-        (message "Installing missing package: %s" pkg)
-        (condition-case err
-            (package-install pkg)
-          (error
-           (message "Failed to install package %s: %s" pkg (error-message-string err))))))))
-
-;; Run package installation (can be commented out after first run)
-(my/ensure-packages-installed)
+;; Install missing packages
+(dolist (package my/essential-packages)
+  (unless (package-installed-p package)
+    (message "Installing %s..." package)
+    (package-install package)))
 
 ;;==============================================================================
-;; NATIVE COMPILATION (JIT)
+;; WINDOWS-SPECIFIC FIXES
 ;;==============================================================================
 
-;; Enable native compilation for packages (Emacs 28+)
-(when (fboundp 'native-comp-available-p)
-  ;; Ensure packages are natively compiled when installed
-  (setq package-native-compile t)
-  ;; Enable deferred background compilation
-  (setq native-comp-deferred-compilation t)
+(when my/is-windows
+  (message "Windows detected - applying fixes")
   
-  ;; Helper function to compile all installed packages
-  (defun my/native-compile-all-packages ()
-    "Compile all installed packages natively in the background.
-Useful after updating Emacs or when native compilation was disabled."
-    (interactive)
-    (when (fboundp 'native-compile-async)
-      (dolist (dir (list (expand-file-name "elpa" user-emacs-directory)
-                         (expand-file-name "straight" user-emacs-directory)
-                         (expand-file-name "~/.config/emacs/elpa")))
-        (when (file-directory-p dir)
-          (native-compile-async dir t)))
-      (message "Native compilation started for all packages in background")))
+  ;; Detect Wezterm for optimal configuration
+  (let ((term (getenv "TERM_PROGRAM"))
+        (wezterm-dir (getenv "WEZTERM_EXECUTABLE_DIR")))
+    (if (or (string= term "WezTerm") wezterm-dir)
+        (progn
+          (message "Wezterm detected - using optimal configuration")
+          ;; Wezterm works best with Git bash
+          (setq shell-file-name "C:/Program Files/Git/bin/bash.exe")
+          (setq explicit-shell-file-name shell-file-name)
+          (setq explicit-bash.exe-args '("--login" "-i"))
+          (setq shell-command-switch "-c"))
+      
+      ;; Not in Wezterm - try multiple configurations
+      (message "Not in Wezterm - trying multiple shell configurations")
+      ;; First try Git bash
+      (if (file-exists-p "C:/Program Files/Git/bin/bash.exe")
+          (progn
+            (setq shell-file-name "C:/Program Files/Git/bin/bash.exe")
+            (setq explicit-shell-file-name shell-file-name))
+        ;; Fall back to PowerShell
+        (setq shell-file-name "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe")
+        (setq explicit-shell-file-name shell-file-name)
+        (setq shell-command-switch "-Command"))))
   
-  ;; Helper function to compile configuration files
-  (defun my/native-compile-config ()
-    "Compile configuration files natively for faster loading."
-    (interactive)
-    (when (fboundp 'native-compile-async)
-      (native-compile-async (expand-file-name "config" user-emacs-directory) t)
-      (message "Native compilation started for configuration files"))))
+  ;; Fix shell arguments to avoid "invalid argument" error
+  ;; This is critical for Windows process creation
+  (unless shell-command-switch
+    (setq shell-command-switch "-c"))
+  
+  ;; Ensure process-connection-type is nil for better pipe handling
+  (setq process-connection-type nil)
+  
+  ;; Fix PATH inheritance - ensure Git/bin is in PATH
+  (let ((git-path "C:/Program Files/Git/bin"))
+    (when (and (file-exists-p git-path)
+               (not (string-match-p (regexp-quote git-path) (getenv "PATH"))))
+      (setenv "PATH" (concat git-path ";" (getenv "PATH")))))
+  
+  ;; TRAMP settings for Windows SSH
+  (setq tramp-default-method "plink")
+  (setq tramp-default-user (user-login-name))
+  
+  ;; Additional Windows process fixes
+  (setq w32-quote-process-args t)
+  (setq w32-pipe-read-delay 0)
+  (setq w32-pipe-buffer-size (* 64 1024)))
 
 ;;==============================================================================
-;; WHICH-KEY
+;; PROCESS/TERMINAL DEBUGGING
 ;;==============================================================================
 
-(use-package which-key
-  :ensure t
-  :defer t
-  :config
-  (which-key-mode)
-  (setq which-key-idle-delay 0.0
-        which-key-idle-secondary-delay 0.0))
+(defun my/debug-process-error (orig-fun &rest args)
+  "Debug wrapper for process functions to catch 'invalid argument' errors."
+  (condition-case err
+      (apply orig-fun args)
+    (error
+     (message "Process error in %s: %S" orig-fun err)
+     (signal (car err) (cdr err)))))
+
+;; Wrap common process functions for debugging
+(advice-add 'make-process :around #'my/debug-process-error)
+(advice-add 'start-process :around #'my/debug-process-error)
+(advice-add 'call-process :around #'my/debug-process-error)
+
+(defun my/fix-child-process-error ()
+  "Comprehensive fix for 'child process invalid argument' error on Windows.
+Tests and applies multiple fixes for Windows process creation issues."
+  (interactive)
+  (let ((buf (get-buffer-create "*process-fix*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "FIXING 'CHILD PROCESS INVALID ARGUMENT' ERROR\n")
+      (insert "============================================\n\n")
+      
+      (insert "COMMON CAUSES:\n")
+      (insert "1. Incorrect shell-file-name or explicit-shell-file-name\n")
+      (insert "2. Missing or incorrect shell-command-switch\n")
+      (insert "3. PATH issues (Git/bin not in PATH)\n")
+      (insert "4. Wezterm not detected properly\n")
+      (insert "5. Windows process creation limits\n\n")
+      
+      (insert "APPLYING FIXES...\n\n")
+      
+      ;; Fix 1: Shell configuration
+      (insert "FIX 1: Shell configuration\n")
+      (let ((git-bash "C:/Program Files/Git/bin/bash.exe")
+            (powershell "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"))
+        (cond
+         ((file-exists-p git-bash)
+          (setq shell-file-name git-bash)
+          (setq explicit-shell-file-name git-bash)
+          (setq shell-command-switch "-c")
+          (insert (format "✓ Using Git bash: %s\n" git-bash)))
+         ((file-exists-p powershell)
+          (setq shell-file-name powershell)
+          (setq explicit-shell-file-name powershell)
+          (setq shell-command-switch "-Command")
+          (insert (format "✓ Using PowerShell: %s\n" powershell)))
+         (t
+          (insert "✗ No valid shell found!\n"))))
+      
+      ;; Fix 2: PATH check
+      (insert "\nFIX 2: PATH environment\n")
+      (let ((git-path "C:/Program Files/Git/bin"))
+        (if (file-exists-p git-path)
+            (progn
+              (unless (string-match-p (regexp-quote git-path) (getenv "PATH"))
+                (setenv "PATH" (concat git-path ";" (getenv "PATH"))))
+              (insert "✓ Git/bin added to PATH\n"))
+          (insert "✗ Git/bin not found\n")))
+      
+      ;; Fix 3: Wezterm detection
+      (insert "\nFIX 3: Wezterm detection\n")
+      (let ((term (getenv "TERM_PROGRAM"))
+            (wezterm-dir (getenv "WEZTERM_EXECUTABLE_DIR")))
+        (if (or (string= term "WezTerm") wezterm-dir)
+            (progn
+              (insert "✓ Running in Wezterm - optimal for SSH\n")
+              (insert "  Consider using TRAMP (C-SPC t t) for SSH/MFA\n"))
+          (insert "✗ Not in Wezterm - run Emacs from Wezterm for best results\n")))
+      
+      ;; Fix 4: Windows process settings
+      (insert "\nFIX 4: Windows process settings\n")
+      (setq w32-quote-process-args t)
+      (setq w32-pipe-read-delay 0)
+      (setq w32-pipe-buffer-size (* 64 1024))
+      (setq process-connection-type nil)
+      (insert "✓ Windows process settings optimized\n")
+      
+      ;; Fix 5: TRAMP configuration
+      (insert "\nFIX 5: TRAMP configuration\n")
+      (setq tramp-default-method "plink")
+      (setq tramp-default-user (user-login-name))
+      (insert "✓ TRAMP configured for Windows SSH\n")
+      
+      ;; Test
+      (insert "\nTEST: Basic process test\n")
+      (condition-case err
+          (progn
+            (call-process shell-file-name nil nil nil shell-command-switch "echo 'Test ok'")
+            (insert "✓ Process creation successful\n"))
+        (error
+         (insert (format "✗ Process error: %s\n" (error-message-string err)))))
+      
+      (insert "\nRECOMMENDATIONS:\n")
+      (insert "1. Run Emacs inside Wezterm (fixes many issues)\n")
+      (insert "2. Use TRAMP for SSH (C-SPC t t) instead of shell\n")
+      (insert "3. If using shell, ensure Git for Windows is installed\n")
+      (insert "4. Try eat terminal (C-SPC t 2) if available\n")
+      (insert "5. Test all SSH methods: M-x my/test-all-ssh-methods\n")
+      
+      (special-mode))
+    (switch-to-buffer buf)))
 
 ;;==============================================================================
-;; GARBAGE COLLECTOR OPTIMIZATION
+;; MODULE SETUP
 ;;==============================================================================
 
-(use-package gcmh
-  :ensure t
-  :config
-  (gcmh-mode 1)
-  (setq gcmh-idle-delay 5
-        gcmh-high-cons-threshold (* 32 1024 1024)))
+;; Load completion framework
+(when (require 'vertico nil t)
+  (vertico-mode))
 
-;;==============================================================================
-;; FONT CONFIGURATION (Wayland / HiDPI / NO XLFD)
-;;==============================================================================
+(when (require 'orderless nil t)
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
 
-(setq-default
- x-gtk-use-system-tooltips nil
- inhibit-compacting-font-caches t)
+;; Load which-key for keybinding hints
+(when (require 'which-key nil t)
+  (which-key-mode))
 
-(setq font-use-system-font nil)
+;; Load general for keybindings
+(unless (require 'general nil t)
+  (message "Warning: general package not available"))
 
-(defvar my/default-font-size 130)
-
-;; Default font selection based on platform
-(defvar my/default-font
-  (if my/is-windows
-      (font-spec :family "Cascadia Code"
-                 :weight 'normal
-                 :size 12)
-    (font-spec :family "CaskaydiaCove Nerd Font"
-               :weight 'semi-bold
-               :size 12)))
-
-(defun my/apply-fonts (&optional frame)
-  "Apply fonts to FRAME (or selected frame)."
-  (with-selected-frame (or frame (selected-frame))
-    (set-frame-font my/default-font t t)
-    (set-face-attribute 'default nil
-                        :family (if my/is-windows "Cascadia Code" "CaskaydiaCove Nerd Font")
-                        :weight (if my/is-windows 'normal 'semi-bold)
-                        :height my/default-font-size)
-    (set-face-attribute 'fixed-pitch nil
-                        :family (if my/is-windows "Cascadia Code" "CaskaydiaCove Nerd Font")
-                        :weight (if my/is-windows 'normal 'semi-bold)
-                        :height my/default-font-size)
-    (set-face-attribute 'variable-pitch nil
-                        :family (if my/is-windows "Cascadia Code" "CaskaydiaCove Nerd Font")
-                        :height my/default-font-size)))
-
-(my/apply-fonts)
-(add-hook 'after-make-frame-functions #'my/apply-fonts)
-
-(pixel-scroll-precision-mode 1)
-
-;;==============================================================================
-;; UI SETTINGS
-;;==============================================================================
-
-(setq inhibit-startup-message t)
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
-(global-display-line-numbers-mode 1)
-(setq display-line-numbers-type 'relative)
-(setq display-line-numbers-width 5)
-(setq display-line-numbers-grow-only nil)
-
-;; Disable line numbers in terminal buffers
-(add-hook 'eshell-mode-hook (lambda () (display-line-numbers-mode -1)))
-(add-hook 'term-mode-hook (lambda () (display-line-numbers-mode -1)))
-
-(add-hook 'shell-mode-hook (lambda () (display-line-numbers-mode -1)))
-;; Disable line highlighting in terminal buffers
-(add-hook 'eshell-mode-hook (lambda () (hl-line-mode -1)))
-(add-hook 'term-mode-hook (lambda () (hl-line-mode -1)))
-
-(add-hook 'shell-mode-hook (lambda () (hl-line-mode -1)))
-;; Set black background for terminal input
-(defun my/terminal-set-black-background ()
-  "Set black background for terminal buffers."
-  (message "Setting black background for %s" (buffer-name))
-  ;; Core faces
-  (face-remap-add-relative 'default :background "#000000")
-  (face-remap-add-relative 'hl-line :background "#000000")
-  (face-remap-add-relative 'region :background "#073642")
-  ;; Eshell-specific faces if available
-  (when (fboundp 'eshell-mode)
-    (dolist (face '(eshell-prompt-face
-                    eshell-ls-directory-face
-                    eshell-ls-executable-face
-                    eshell-ls-missing-face
-                    eshell-ls-product-face
-                    eshell-ls-readonly-face
-                    eshell-ls-special-face
-                    eshell-ls-symlink-face
-                    eshell-ls-unreadable-face
-                    eshell-ls-archive-face
-                    eshell-ls-backup-face
-                    eshell-ls-clutter-face
-                    eshell-ls-date-face
-                    eshell-ls-missing-face
-                    eshell-ls-permissions-face
-                    eshell-ls-product-face
-                    eshell-ls-size-face
-                    eshell-ls-todo-face))
-      (when (facep face)
-        (face-remap-add-relative face :background "#000000")))))
-(add-hook 'eshell-mode-hook #'my/terminal-set-black-background)
-(add-hook 'term-mode-hook #'my/terminal-set-black-background)
-
-(add-hook 'shell-mode-hook #'my/terminal-set-black-background)
-
-(setq idle-update-delay 0.0
-      cursor-in-non-selected-windows nil
-      highlight-nonselected-windows nil)
-
-;;==============================================================================
-;; EDITOR BEHAVIOR
-;;==============================================================================
-
-(setq-default indent-tabs-mode nil
-              tab-width 4
-              truncate-lines t)
-
-(setq truncate-partial-width-windows nil)
-
-(global-auto-revert-mode 1)
-(setq global-auto-revert-non-file-buffers t
-      auto-revert-verbose nil)
-
-(save-place-mode 1)
-(recentf-mode 1)
-(setq recentf-max-saved-items 100)
-
-(show-paren-mode 1)
-(global-hl-line-mode 1)
-
-(setq show-paren-delay 0
-      scroll-margin 8
-      scroll-conservatively 101
-      scroll-preserve-screen-position t
-      fast-but-imprecise-scrolling t
-      redisplay-skip-fontification-on-input t)
-
-(defvar default-file-name-handler-alist file-name-handler-alist)
-(setq file-name-handler-alist nil)
+;; Startup message
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq file-name-handler-alist default-file-name-handler-alist)))
-
-(setq backup-directory-alist '(("." . "~/.emacs.d/backups"))
-      delete-old-versions t
-      kept-new-versions 6
-      kept-old-versions 2
-      version-control t
-      auto-save-default t
-      auto-save-timeout 20
-      auto-save-interval 200)
+            (when (interactive-p)
+              (message "Terminal testing configuration loaded!")
+              (message "Press F1 for help, F8 to fix process errors, F9 to test SSH methods")
+              (message "Use C-SPC t 1-5 to test terminals, C-SPC t t for TRAMP SSH"))))
 
 (provide 'core)
-;;; core.el ends here

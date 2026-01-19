@@ -1,394 +1,404 @@
-;;; helpers.el --- Helper functions for Emacs configuration -*- lexical-binding: t -*-
+;;; helpers.el --- Terminal helper functions for testing -*- lexical-binding: t -*-
 
 ;;; Commentary:
-;; Helper functions used throughout the configuration.
-
-(require 'shell)
-
-;;==============================================================================
-;; HELPER FUNCTIONS
-;;==============================================================================
-
-(defun my/current-dir ()
-  "Return directory of current buffer, or `default-directory`."
-  (if-let ((file (buffer-file-name)))
-      (file-name-directory file)
-    default-directory))
-
-;;;###autoload
-(defun my/open-current-dir-dired ()
-  "Open dired in current buffer's directory."
-  (interactive)
-  (dired (my/current-dir)))
-
-(defvar my/search-use-regexp t
-  "If non-nil, use regexp search with consult-ripgrep.
-If nil, use fixed strings search.")
-
-;;;###autoload
-(defun my/consult-ripgrep-toggle-regex ()
-  "Toggle between regexp and fixed string search for consult-ripgrep."
-  (interactive)
-  (setq my/search-use-regexp (not my/search-use-regexp))
-  (message "Search mode: %s" (if my/search-use-regexp "regexp" "fixed strings")))
-
-;;;###autoload
-(defun my/consult-ripgrep-current-dir ()
-  "Run consult-ripgrep in current directory with pattern prompt first.
-Prompts for search pattern, then runs consult-ripgrep with pattern pre-filled.
-Avoids empty interface by ensuring pattern is entered before consult starts."
-  (interactive)
-  (require 'consult)
-  
-  (let ((dir (my/current-dir))
-        (pattern (read-string "Search: ")))
-    
-    (when (string-blank-p pattern)
-      (user-error "Search pattern cannot be empty"))
-    
-    (setq dir (expand-file-name dir))
-    (unless (file-directory-p dir)
-      (user-error "Directory does not exist: %s" dir))
-    
-    ;; Handle fixed string search by inserting --fixed-strings after command name
-    (let ((consult-ripgrep-args
-           (if my/search-use-regexp
-               consult-ripgrep-args
-             ;; For fixed strings, add --fixed-strings after the command name (rg or rg.exe)
-             (if (listp consult-ripgrep-args)
-                 (let ((cmd (car consult-ripgrep-args))
-                       (rest (cdr consult-ripgrep-args)))
-                   (cons cmd (cons "--fixed-strings" rest)))
-               ;; If it's a string, add --fixed-strings after first word
-               (if (string-match "^\\(\\S-+\\)\\(.*\\)" consult-ripgrep-args)
-                   (concat (match-string 1 consult-ripgrep-args)
-                           " --fixed-strings"
-                           (match-string 2 consult-ripgrep-args))
-                 (concat "--fixed-strings " consult-ripgrep-args))))))
-      (condition-case err
-          (consult-ripgrep dir pattern)
-        (error
-         (message "consult-ripgrep error: %s" err)
-         (user-error "Search failed: %s" (error-message-string err)))))))
-
-;;;###autoload
-(defun my/consult-find-current-dir ()
-  "Run consult-find in current directory for fuzzy file search."
-  (interactive)
-  (consult-find (my/current-dir)))
+;; Terminal testing functions for Windows SSH/MFA support
+;; C-SPC t 1-5: Test different terminal emulators
 
 ;;==============================================================================
-;; PROJECT MANAGEMENT
+;; TERMINAL TEST FUNCTIONS
 ;;==============================================================================
 
-;;;###autoload
-(defun my/create-new-project ()
-  "Create new project directory with git and GitHub setup.
-Asks for project name, creates directory in ~/projects/, initializes git,
-creates README.md, and optionally creates GitHub repository using gh CLI."
+(defun my/terminal-eshell ()
+  "Open eshell terminal.
+Eshell is Emacs' built-in shell written in Elisp.
+Pros: Integrated with Emacs, cross-platform
+Cons: Limited terminal emulation, may have issues with SSH MFA"
   (interactive)
-  ;; Check if gh CLI is available
-  (unless (executable-find "gh")
-    (message "Warning: GitHub CLI (gh) not found. GitHub repository creation will be skipped."))
-  
-  (let* ((project-name (read-string "Project name: "))
-         (project-dir (expand-file-name (concat "~/projects/" project-name)))
-         (create-github (and (executable-find "gh")
-                             (y-or-n-p "Create GitHub repository? ")))
-         (visibility (when create-github
-                       (if (y-or-n-p "Make repository public? (No for private) ")
-                           "--public"
-                         "--private"))))
-    
-    ;; Validate project name
-    (when (string-empty-p project-name)
-      (error "Project name cannot be empty"))
-    
-    ;; Check if directory already exists
-    (when (file-exists-p project-dir)
-      (if (y-or-n-p (format "Directory %s already exists. Use it? " project-dir))
-          (message "Using existing directory: %s" project-dir)
-        (error "Project directory already exists")))
-    
-    ;; Create directory
-    (make-directory project-dir t)
-    (message "Created directory: %s" project-dir)
-    
-    ;; Change to project directory
-    (let ((default-directory project-dir))
-      ;; Initialize git repository if not already
-      (unless (file-exists-p (expand-file-name ".git" project-dir))
-        (message "Initializing git repository...")
-        (unless (zerop (call-process-shell-command "git init -b main"))
-          (error "Failed to initialize git repository"))
-        
-        ;; Create README.md
-        (with-temp-file (expand-file-name "README.md" project-dir)
-          (insert (format "# %s\n\nProject description\n" project-name)))
-        (message "Created README.md")
-        
-        ;; Initial commit
-        (unless (zerop (call-process-shell-command "git add README.md"))
-          (error "Failed to stage README.md"))
-        (unless (zerop (call-process-shell-command "git commit -m 'initial commit'"))
-          (error "Failed to create initial commit"))
-        (message "Created initial commit")
-        
-        ;; Create GitHub repository if requested
-        (when create-github
-          (message "Creating GitHub repository...")
-          (let ((command (format "gh repo create %s %s --source=. --remote=origin --push" 
-                                 project-name visibility)))
-            (message "Running: %s" command)
-            (let ((exit-code (call-process-shell-command command)))
-              (if (zerop exit-code)
-                  (message "GitHub repository created successfully: %s" project-name)
-                (message "GitHub repository creation may have failed (exit code: %d)" exit-code))))
-          ;; Wait a moment for push to complete
-          (sleep-for 1)))
+  (message "Opening eshell...")
+  (require 'eshell)
+  (let ((buf (eshell)))
+    (with-current-buffer buf
+      (rename-buffer "*eshell-test*" t))
+    buf))
+
+(defun my/terminal-eat ()
+  "Open eat terminal emulator.
+Eat is a modern terminal emulator within Emacs.
+Pros: Good terminal emulation, supports SSH
+Cons: Requires eat package"
+  (interactive)
+  (message "Opening eat terminal...")
+  (if (require 'eat nil t)
+      (progn
+        (eat)
+        (rename-buffer "*eat-test*" t))
+    (message "eat package not available - install with M-x package-install RET eat RET")
+    nil))
+
+(defun my/terminal-shell ()
+  "Open shell (inferior shell process).
+Uses system shell (bash on Unix, cmd/powershell on Windows).
+Pros: Native shell, good for SSH
+Cons: Process may have 'invalid argument' errors"
+  (interactive)
+  (message "Opening shell...")
+  (let ((buf (shell)))
+    (with-current-buffer buf
+      (rename-buffer "*shell-test*" t))
+    buf))
+
+(defun my/terminal-term ()
+  "Open term (full terminal emulator).
+Full terminal emulation using term.el.
+Pros: Full terminal emulation, supports SSH
+Cons: May not work well with Windows"
+  (interactive)
+  (message "Opening term...")
+  (let ((buf (term (or explicit-shell-file-name shell-file-name))))
+    (with-current-buffer buf
+      (rename-buffer "*term-test*" t))
+    buf))
+
+(defun my/terminal-ansi-term ()
+  "Open ansi-term (ANSI terminal emulator).
+Similar to term but with ANSI support.
+Pros: ANSI color support, good terminal emulation
+Cons: May have issues on Windows"
+  (interactive)
+  (message "Opening ansi-term...")
+  (let ((buf (ansi-term (or explicit-shell-file-name shell-file-name))))
+    (with-current-buffer buf
+      (rename-buffer "*ansi-term-test*" t))
+    buf))
+
+(defun my/terminal-powershell ()
+  "Open PowerShell terminal (Windows only).
+Direct PowerShell terminal for Windows users.
+Pros: Native PowerShell, good for Windows SSH
+Cons: Windows only"
+  (interactive)
+  (message "Opening PowerShell...")
+  (if my/is-windows
+      (let ((buf (shell)))
+        (with-current-buffer buf
+          (rename-buffer "*powershell-test*" t)
+          (when (string-match-p "powershell" (or shell-file-name ""))
+            (term-send-string buf "powershell\n")))
+        buf)
+    (message "PowerShell only available on Windows")
+    nil))
+
+(defun my/terminal-cmdproxy ()
+  "Open cmd.exe proxy (Windows only).
+Uses cmdproxy for better Windows compatibility.
+Pros: Better Windows process handling
+Cons: Windows only, cmdproxy may not be installed"
+  (interactive)
+  (message "Opening cmdproxy...")
+  (if my/is-windows
+      (let* ((cmdproxy "C:/Windows/System32/cmdproxy.exe")
+             (buf (if (file-exists-p cmdproxy)
+                      (progn
+                        (setq explicit-shell-file-name cmdproxy)
+                        (shell))
+                    (message "cmdproxy.exe not found at %s" cmdproxy)
+                    nil))))
+    (message "cmdproxy only available on Windows")
+    nil))
+
+(defun my/terminal-vterm ()
+  "Open vterm terminal emulator.
+vterm is a fast terminal emulator using libvterm.
+Requires: vterm package and libvterm library."
+  (interactive)
+  (message "Opening vterm...")
+  (if (require 'vterm nil t)
+      (progn
+        (vterm)
+        (rename-buffer "*vterm-test*" t))
+    (message "vterm package not available - install with M-x package-install RET vterm RET")
+    nil))
+
+(defun my/terminal-multi-term ()
+  "Open multi-term terminal.
+Manages multiple term buffers."
+  (interactive)
+  (message "Opening multi-term...")
+  (if (require 'multi-term nil t)
+      (progn
+        (multi-term)
+        (rename-buffer "*multi-term-test*" t))
+    (message "multi-term package not available - install with M-x package-install RET multi-term RET")
+    nil))
+
+(defun my/terminal-wsl ()
+  "Open WSL (Windows Subsystem for Linux) terminal.
+Requires WSL installation and bash.exe."
+  (interactive)
+  (message "Opening WSL terminal...")
+  (if my/is-windows
+      (let ((wsl-bash "C:/Windows/System32/bash.exe"))
+        (if (file-exists-p wsl-bash)
+            (let ((buf (term wsl-bash)))
+              (with-current-buffer buf
+                (rename-buffer "*wsl-test*" t))
+              buf)
+          (message "WSL bash.exe not found at %s" wsl-bash)
+          nil))
+    (message "WSL only available on Windows")
+    nil))
+
+(defun my/terminal-wezterm-integration ()
+  "Test Wezterm integration when Emacs runs inside Wezterm.
+If Emacs is running inside Wezterm, SSH may work better.
+This function tests if we're in Wezterm and provides recommendations."
+  (interactive)
+  (let ((buf (get-buffer-create "*wezterm-test*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "WEZTERM INTEGRATION TEST\n")
+      (insert "========================\n\n")
       
-      ;; Open the new project directory in dired
-      (dired project-dir)
-      (message "Project created: %s" project-dir))))
+      ;; Check if we're in Wezterm
+      (let ((term (getenv "TERM_PROGRAM"))
+            (wezterm-dir (getenv "WEZTERM_EXECUTABLE_DIR")))
+        (insert (format "TERM_PROGRAM: %s\n" term))
+        (insert (format "WEZTERM_EXECUTABLE_DIR: %s\n\n" wezterm-dir))
+        
+        (if (or (string= term "WezTerm") wezterm-dir)
+            (progn
+              (insert "✓ Running inside Wezterm detected!\n\n")
+              (insert "RECOMMENDATIONS:\n")
+              (insert "1. Wezterm handles SSH/MFA prompts well\n")
+              (insert "2. Use native shell (C-SPC t 3) for SSH\n")
+              (insert "3. Or use TRAMP (C-SPC t t) for Emacs integration\n")
+              (insert "4. Wezterm's terminal emulation is excellent\n\n")
+              (insert "SETUP:\n")
+              (insert "- Ensure Wezterm is your terminal\n")
+              (insert "- Emacs should inherit proper environment\n")
+              (insert "- SSH may work better than in other terminals\n"))
+          (insert "Not running inside Wezterm\n")
+          (insert "Consider running Emacs inside Wezterm for better SSH support\n")))
+      
+      (insert "\nTEST SSH IN WEZTERM:\n")
+      (insert "1. Open shell (C-SPC t 3)\n")
+      (insert "2. Try SSH command: ssh user@host\n")
+      (insert "3. Wezterm should handle MFA prompts\n\n")
+      
+      (insert "WEZTERM ADVANTAGES:\n")
+      (insert "- Excellent terminal emulation\n")
+      (insert "- Good Windows process handling\n")
+      (insert "- Better SSH/MFA support than cmd/powershell\n")
+      (insert "- Modern features (GPU acceleration, etc.)\n")
+      
+      (special-mode))
+    (switch-to-buffer buf)))
 
-;;;###autoload
-(defun my/detect-shell ()
-  "Return appropriate shell command for current platform."
-  (cond
-   ((memq system-type '(windows-nt ms-dos cygwin))
-    (if (executable-find "powershell.exe") "powershell.exe" "cmd.exe"))
-   ((executable-find "pwsh") "pwsh")
-   (t "/bin/bash")))
-
-(defun my/shell-args (shell-name)
-  "Return shell arguments for SHELL-NAME.
-SHELL-NAME can be a string or nil. Returns nil for unknown shells."
-  (when (stringp shell-name)
-    (cond
-     ((string-match "powershell\\.exe\\|pwsh" shell-name)
-      '("-NoExit" "-NoLogo" "-NoProfile" "-Command" "-"))
-     ((string-match "cmd\\.exe" shell-name)
-      '("/k"))
-     (t nil))))
-
-(defun my/configure-shell-mode ()
-  "Configure shell mode for specific shell types.
-Sets comint variables for better PowerShell and general shell experience."
-  (when (derived-mode-p 'shell-mode)
-    ;; Skip configuration for PowerShell buffers created by powershell.el
-    ;; as they have their own configuration
-    (unless (string-match "\\*PowerShell\\*" (buffer-name))
-      (when (stringp explicit-shell-file-name)
-        (let ((shell-name (file-name-nondirectory explicit-shell-file-name)))
-          (cond
-           ((string-match "powershell\\.exe\\|pwsh" shell-name)
-            ;; PowerShell specific settings
-            (setq-local comint-process-echoes nil)  ; PowerShell echoes its own prompt
-            (setq-local comint-use-prompt-regexp t)
-            (setq-local comint-prompt-regexp "^PS.*> "))
-           ((string-match "cmd\\.exe" shell-name)
-            ;; cmd.exe settings
-            (setq-local comint-process-echoes t)
-            (setq-local comint-use-prompt-regexp t)
-            (setq-local comint-prompt-regexp "^[A-Z]:\\.*?> "))
-           (t
-            ;; Unix shell defaults
-            (setq-local comint-process-echoes nil)
-            (setq-local comint-use-prompt-regexp nil))))))))
-
-;; Run configuration when shell mode starts
-(with-eval-after-load 'shell
-  (add-hook 'shell-mode-hook #'my/configure-shell-mode))
-
-;;;###autoload
-(defun my/open-shell-here ()
-  "Open shell in current buffer's directory with PowerShell detection.
-On Windows, uses powershell.el if available, otherwise powershell.exe.
-On Linux/macOS, uses pwsh if available, otherwise falls back to bash."
+(defun my/test-wezterm-ssh ()
+  "Test SSH specifically in Wezterm environment.
+Opens shell and tries SSH connection with Wezterm detection."
   (interactive)
-  (let ((default-directory (my/current-dir)))
-    (cond
-     ;; Use powershell.el function if available and on Windows
-     ((memq system-type '(windows-nt ms-dos cygwin))
-      (condition-case err
-          (progn
-            ;; Try to load powershell.el if not already loaded
-            (unless (fboundp 'powershell)
-              (require 'powershell))
-            (powershell))
-        (error
-         ;; Fall back to generic shell if powershell.el fails
-         (message "powershell.el failed: %s, falling back to generic shell" 
-                  (error-message-string err))
-         (let ((explicit-shell-file-name (my/detect-shell))
-               (explicit-shell-args (my/shell-args explicit-shell-file-name)))
-           (shell)))))
-     ;; Otherwise use generic shell with detected shell
-     (t
-      (let ((explicit-shell-file-name (my/detect-shell))
-            (explicit-shell-args (my/shell-args explicit-shell-file-name)))
-        (shell))))))
-
-;;==============================================================================
-;; ANSI-TERM TERMINAL EMULATOR
-;;==============================================================================
-
-;;;###autoload
-(defun my/open-ansi-term-here ()
-  "Open ansi-term (terminal emulator) in current buffer's directory.
-Uses PowerShell on Windows, bash on Unix. Provides better terminal emulation
-than shell-mode for SSH and interactive programs."
-  (interactive)
-  (let ((default-directory (my/current-dir))
-        (shell (cond
-                ((eq system-type 'windows-nt)
-                 (if (executable-find "powershell.exe") 
-                     "powershell.exe"
-                   "cmd.exe"))
-                (t
-                 (or (executable-find "bash") "/bin/bash")))))
-    (ansi-term shell)))
-
-;; Configure term-mode for Windows SSH compatibility
-(defun my/configure-term-mode-windows ()
-  "Configure term-mode for Windows SSH compatibility."
-  (when (derived-mode-p 'term-mode)
-    (when (eq system-type 'windows-nt)
-      ;; Set up term-mode for better terminal emulation
-      (setq-local term-prompt-regexp "^[A-Z]:\\.*?> \\|^PS.*> ")
-      (setq-local term-escape-char ?\C-c)
-      ;; Note: term-mode provides better pseudo-terminal emulation than shell-mode
-      (message "term-mode: For SSH on Windows, use 'ssh -t hostname'"))))
-
-(add-hook 'term-mode-hook #'my/configure-term-mode-windows)
-
-;;==============================================================================
-;; EAT TERMINAL EMULATOR
-;;==============================================================================
-
-;;;###autoload
-(defun my/open-eat-here ()
-  "Open eat (Emulated Advanced Terminal) in current buffer's directory.
-Eat is a terminal emulator with excellent Windows and SSH support.
-On Windows, provides proper shell arguments to avoid spawn errors."
-  (interactive)
-  (let ((default-directory (my/current-dir))
-        (shell (cond
-                ((eq system-type 'windows-nt)
-                 (if (executable-find "powershell.exe")
-                     "powershell.exe"
-                   "cmd.exe"))
-                (t
-                 (or (executable-find "bash") "/bin/bash"))))
-        (shell-args (cond
-                     ((eq system-type 'windows-nt)
-                      (if (executable-find "powershell.exe")
-                          '("-NoExit" "-NoLogo" "-NoProfile")
-                        '("/k")))
-                     (t
-                      nil))))
-    (condition-case err
+  (let ((term (getenv "TERM_PROGRAM")))
+    (if (string= term "WezTerm")
         (progn
-          ;; Ensure eat is loaded
-          (require 'eat nil t)
-          (if shell-args
-              ;; Use eat-make to pass shell arguments
-              (eat-make (generate-new-buffer-name "*eat*") shell nil shell-args)
-            ;; No arguments, use plain eat
-            (eat shell)))
-      (error
-       (message "eat failed: %s, falling back to ansi-term" (error-message-string err))
-       (my/open-ansi-term-here)))))
+          (message "Wezterm detected - testing SSH...")
+          (let ((buf (my/terminal-shell)))
+            (when buf
+              (with-current-buffer buf
+                (goto-char (point-max))
+                (insert "echo 'Wezterm SSH test - try: ssh user@host'\n")
+                (comint-send-input)))))
+      (message "Not running in Wezterm. Start Emacs from Wezterm for best results."))))
 
-;;;###autoload
-(defun my/open-eat-eshell-here ()
-  "Open eshell with eat terminal emulation enabled.
-This provides excellent terminal emulation within eshell, especially
-for Windows SSH support."
-  (interactive)
-  (let ((default-directory (my/current-dir)))
-    ;; Ensure eat is loaded
-    (if (require 'eat nil t)
-        (progn
-          ;; Enable eat-eshell-mode globally if not already enabled
-          (unless (and (boundp 'eat-eshell-mode) eat-eshell-mode)
-            (eat-eshell-mode 1))
-          ;; Open eshell
-          (eshell t))
-      ;; If eat is not available, fall back to regular eshell
-      (message "eat package not available, using regular eshell")
-      (eshell t))))
+;;==============================================================================
+;; SSH/MFA TEST FUNCTION
+;;==============================================================================
 
-;; Configure eat for Windows SSH compatibility
-(defun my/configure-eat-mode-windows ()
-  "Configure eat-mode for Windows SSH compatibility."
-  (when (derived-mode-p 'eat-mode)
-    (when (eq system-type 'windows-nt)
-      ;; Eat provides excellent terminal emulation, SSH should work well
-      (setq-local eat-term-prompt-regexp "^[A-Z]:\\.*?> \\|^PS.*> ")
-      ;; Eat handles pseudo-terminal allocation better than shell-mode
-      (message "eat-mode: SSH should work without -t flag on Windows"))))
-
-(with-eval-after-load 'eat
-  (add-hook 'eat-mode-hook #'my/configure-eat-mode-windows)
+(defun my/test-ssh-mfa (hostname username)
+  "Test SSH connection with MFA support.
+Opens SSH connection in selected terminal and waits for MFA prompt.
+HOSTNAME: Server to connect to
+USERNAME: SSH username"
+  (interactive "sHostname: \nsUsername: ")
+  (message "Testing SSH MFA connection to %s@%s" username hostname)
   
-  ;; Windows workaround for eat's hardcoded /usr/bin/env sh -c command
-  (when (eq system-type 'windows-nt)
-    ;; Define advice function
-    (defun my/eat-exec-windows-advice (orig-fun buffer name command startfile switches)
-      "Adjust eat-exec arguments for Windows compatibility."
-      (if (string= command "/usr/bin/env")
-          ;; Replace Unix-style command with Windows shell
-          (let* ((shell (if (executable-find "powershell.exe")
-                            "powershell.exe"
-                          "cmd.exe"))
-                 (args (if (executable-find "powershell.exe")
-                           '("-NoExit" "-NoLogo" "-NoProfile")
-                         '("/k"))))
-            (funcall orig-fun buffer name shell startfile args))
-        ;; Otherwise call original
-        (funcall orig-fun buffer name command startfile switches)))
-    ;; Add advice only once
-    (unless (advice-member-p #'my/eat-exec-windows-advice 'eat-exec)
-      (advice-add 'eat-exec :around #'my/eat-exec-windows-advice))))
+  ;; Let user choose terminal type
+  (let* ((choices '(("eshell" . my/terminal-eshell)
+                    ("eat" . my/terminal-eat)
+                    ("shell" . my/terminal-shell)
+                    ("term" . my/terminal-term)
+                    ("ansi-term" . my/terminal-ansi-term)
+                    ("powershell" . my/terminal-powershell)
+                    ("cmdproxy" . my/terminal-cmdproxy)
+                    ("WSL" . my/terminal-wsl)))
+         (choice (completing-read "Select terminal type: "
+                                  (mapcar 'car choices) nil t "eshell"))
+         (terminal-func (cdr (assoc choice choices)))
+         (buf (funcall terminal-func)))
+    
+    (when buf
+      (with-current-buffer buf
+        (goto-char (point-max))
+        ;; Send SSH command
+        (let ((ssh-cmd (format "ssh %s@%s\n" username hostname)))
+          (message "Sending SSH command: %s" ssh-cmd)
+          (cond
+           ((eq terminal-func 'my/terminal-eshell)
+            (insert ssh-cmd)
+            (eshell-send-input))
+           ((or (eq terminal-func 'my/terminal-term)
+                (eq terminal-func 'my/terminal-ansi-term))
+            (term-send-string buf ssh-cmd))
+           (t
+            (insert ssh-cmd)
+            (comint-send-input)))))))
+  
+  (message "SSH MFA test started. Check for MFA prompt in terminal."))
 
 ;;==============================================================================
-;; UNIFIED TERMINAL FUNCTION
+;; TRAMP SSH FUNCTION (RECOMMENDED FOR MFA)
 ;;==============================================================================
 
-;;;###autoload
-(defun my/open-best-terminal-here ()
-  "Open the best available terminal in current directory.
-Tries: eat -> vterm (Unix only) -> ansi-term -> powershell.el -> shell."
-  (interactive)
-  (let ((default-directory (my/current-dir)))
+(defun my/ssh-tramp-mfa (hostname username)
+  "Connect via TRAMP with MFA support.
+TRAMP handles SSH connections within Emacs and supports MFA prompts.
+This is the RECOMMENDED method for SSH with MFA on Windows."
+  (interactive "sHostname: \nsUsername: ")
+  (message "Opening TRAMP connection to %s@%s" username hostname)
+  
+  (let ((tramp-path (format "/ssh:%s@%s:" username hostname)))
     (cond
-     ;; eat (recommended for Windows SSH compatibility)
-     ((fboundp 'eat)
-      (my/open-eat-here))
+     ;; Try dired first (file browser)
+     ((y-or-n-p "Open remote directory with dired? (Recommended for file access)")
+      (dired tramp-path)
+      (message "TRAMP dired opened. For shell access, run: M-x shell RET"))
      
-     ;; vterm (Unix/Linux only - not recommended for Windows)
-     ((and (not (eq system-type 'windows-nt))
-           (fboundp 'vterm))
-      (vterm))
-     
-     ;; ansi-term (built-in terminal emulator)
-     ((fboundp 'ansi-term)
-      (my/open-ansi-term-here))
-     
-     ;; Windows: try powershell.el first
-     ((and (eq system-type 'windows-nt)
-           (condition-case nil
-               (progn
-                 (unless (fboundp 'powershell)
-                   (require 'powershell))
-                 t)
-             (error nil)))
-      (powershell))
-     
-     ;; Fall back to shell
+     ;; Or open shell directly
      (t
-      (my/open-shell-here)))))
+      (let ((default-directory tramp-path))
+        (shell)
+        (message "TRAMP shell opened in remote directory"))))))
+
+;;==============================================================================
+;; TERMINAL COMPARISON HELPER
+;;==============================================================================
+
+(defun my/compare-terminals ()
+  "Open comparison buffer showing terminal options and recommendations."
+  (interactive)
+  (let ((buf (get-buffer-create "*terminal-comparison*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "TERMINAL OPTIONS FOR WINDOWS SSH/MFA\n")
+      (insert "=====================================\n\n")
+      
+      (insert "RECOMMENDED FOR SSH/MFA:\n")
+      (insert "1. TRAMP (C-SPC t t) - Best for MFA, integrated with Emacs\n")
+      (insert "   - Handles SSH prompts automatically\n")
+      (insert "   - File access via dired, shell access via M-x shell\n")
+      (insert "   - No terminal emulation issues\n\n")
+      
+      (insert "TERMINAL EMULATORS (test with C-SPC t 1-5):\n")
+      (insert "1. eshell (C-SPC t 1) - Emacs Lisp shell\n")
+      (insert "   Pros: Integrated, cross-platform\n")
+      (insert "   Cons: Limited terminal emulation\n\n")
+      
+      (insert "2. eat (C-SPC t 2) - Modern terminal emulator\n")
+      (insert "   Pros: Good emulation, SSH support\n")
+      (insert "   Cons: Requires package install\n\n")
+      
+      (insert "3. shell (C-SPC t 3) - Inferior shell process\n")
+      (insert "   Pros: Native shell\n")
+      (insert "   Cons: May have 'invalid argument' errors\n\n")
+      
+      (insert "4. term (C-SPC t 4) - Full terminal emulator\n")
+      (insert "   Pros: Full emulation\n")
+      (insert "   Cons: Windows compatibility issues\n\n")
+      
+      (insert "5. ansi-term (C-SPC t 5) - ANSI terminal\n")
+      (insert "   Similar to term with color support\n\n")
+      
+      (insert "WINDOWS-SPECIFIC:\n")
+      (insert "- powershell (C-SPC t p) - Native PowerShell\n")
+      (insert "- cmdproxy (C-SPC t c) - Better process handling\n")
+      (insert "- Wezterm integration (C-SPC t z) - Best terminal for SSH\n\n")
+      
+      (insert "WEZTERM ADVANTAGES FOR SSH:\n")
+      (insert "- Excellent terminal emulation\n")
+      (insert "- Good Windows process handling (fixes 'invalid argument')\n")
+      (insert "- Better SSH/MFA support than cmd/powershell\n")
+      (insert "- Modern features (GPU acceleration, etc.)\n\n")
+      
+      (insert "RECOMMENDED WORKFLOW:\n")
+      (insert "1. Run Emacs inside Wezterm\n")
+      (insert "2. Use TRAMP for SSH with MFA (C-SPC t t)\n")
+      (insert "3. Or use shell inside Wezterm (C-SPC t 3)\n\n")
+      
+      (insert "TESTING:\n")
+      (insert "M-x my/test-ssh-mfa RET - Test SSH with MFA in any terminal\n")
+      (insert "M-x my/ssh-tramp-mfa RET - Test SSH with TRAMP (recommended)\n")
+      (insert "M-x my/test-wezterm-ssh RET - Test SSH in Wezterm\n")
+      (insert "M-x my/test-all-ssh-methods RET - Test all 10 SSH methods\n")
+      
+      (special-mode))
+    (switch-to-buffer buf)))
+
+(defun my/terminal-quick-help ()
+  "Show quick help for terminal testing and SSH setup."
+  (interactive)
+  (let ((buf (get-buffer-create "*terminal-quick-help*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "QUICK HELP: TERMINAL TESTING & SSH SETUP\n")
+      (insert "========================================\n\n")
+      
+      (insert "GOAL: Fix 'child process invalid argument' error and get SSH/MFA working\n\n")
+      
+      (insert "KEYBINDINGS:\n")
+      (insert "C-SPC t 1-5 - Test terminal emulators (1:eshell, 2:eat, 3:shell, 4:term, 5:ansi-term)\n")
+      (insert "C-SPC t p   - PowerShell terminal\n")
+      (insert "C-SPC t c   - cmdproxy terminal\n")
+      (insert "C-SPC t w   - WSL terminal\n")
+      (insert "C-SPC t z   - Wezterm integration test\n")
+      (insert "C-SPC t Z   - Test SSH in Wezterm\n")
+      (insert "C-SPC t t   - TRAMP SSH with MFA (RECOMMENDED)\n")
+      (insert "C-SPC t s   - Test SSH MFA in any terminal\n")
+      (insert "C-SPC t h   - Terminal comparison help\n")
+      (insert "C-SPC t d   - Debug terminal setup\n")
+      (insert "C-SPC f     - Fix process errors\n")
+      (insert "C-SPC s     - Quick SSH test\n")
+      (insert "C-SPC T     - Test all terminals\n")
+      (insert "C-SPC s a   - Test all 10 SSH methods\n")
+      (insert "C-'         - Quick eshell\n")
+      (insert "C-\"         - Quick TRAMP SSH\n\n")
+      
+      (insert "WEZTERM ANSWER:\n")
+      (insert "YES! SSH will likely work better if you open Emacs inside Wezterm.\n")
+      (insert "Wezterm has excellent terminal emulation and fixes Windows process issues.\n\n")
+      
+      (insert "RECOMMENDED WORKFLOW:\n")
+      (insert "1. Install Wezterm (https://wezfurlong.org/wezterm/)\n")
+      (insert "2. Start Emacs from Wezterm: `wezterm start emacs`\n")
+      (insert "3. Use TRAMP for SSH: C-SPC t t (hostname, username)\n")
+      (insert "4. For shell access: M-x shell (after TRAMP connection)\n\n")
+      
+      (insert "ALTERNATIVES IF WEZTERM DOESN'T WORK:\n")
+      (insert "1. Use eat terminal: C-SPC t 2 (install: M-x package-install eat)\n")
+      (insert "2. Use TRAMP directly: C-SPC t t (always works)\n")
+      (insert "3. Try different shell: C-SPC t 3, C-SPC t p, C-SPC t c\n\n")
+      
+      (insert "DEBUGGING:\n")
+      (insert "M-x my/fix-child-process-error - Comprehensive fix for 'invalid argument'\n")
+      (insert "M-x my/debug-terminal-setup    - Show terminal configuration\n")
+      (insert "M-x my/ssh-debug-process       - Debug SSH process creation\n\n")
+      
+      (insert "NEXT STEPS:\n")
+      (insert "1. Test if in Wezterm: C-SPC t z\n")
+      (insert "2. Fix process errors: C-SPC f\n")
+      (insert "3. Test SSH: C-SPC s a (all 10 methods)\n")
+      (insert "4. Use TRAMP for MFA: C-SPC t t\n")
+      
+      (special-mode))
+    (switch-to-buffer buf)))
 
 (provide 'helpers)
-;;; helpers.el ends here
