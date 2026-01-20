@@ -21,6 +21,7 @@
 (global-set-key (kbd "C-\"") 'my/ssh-tramp-mfa)
 
 ;; Leader key emulation (C-SPC prefix)
+(global-unset-key (kbd "C-SPC"))
 (defvar my/leader-map (make-sparse-keymap)
   "Keymap for leader key bindings.")
 
@@ -81,9 +82,8 @@
 ;; Other leader bindings
 (define-key my/leader-map "f" 'my/fix-child-process-error)
 (define-key my/leader-map "T" 'my/test-all-terminals)
-(define-key my/leader-map "s" 'my/quick-ssh-test)  ; Overrides ssh-map?
 
-;; Fix conflict - use "S" for quick SSH test instead
+;; Quick SSH test - use "S" (uppercase) to avoid conflict with ssh-map
 (define-key my/leader-map "S" 'my/quick-ssh-test)
 
 ;;==============================================================================
