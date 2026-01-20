@@ -28,12 +28,48 @@ Pros: Good terminal emulation, supports SSH
 Cons: Requires eat package"
   (interactive)
   (message "Opening eat terminal...")
-  (if (require 'eat nil t)
-      (progn
-        (eat)
-        (rename-buffer "*eat-test*" t))
-    (message "eat package not available - install with M-x package-install RET eat RET")
-    nil))
+  
+  ;; Try multiple ways to load eat
+  (cond
+   ;; First try standard require
+   ((require 'eat nil t)
+    (eat)
+    (rename-buffer "*eat-test*" t)
+    t)
+   
+   ;; Try loading from autoloads
+   ((load "eat-autoloads" nil t)
+    (if (fboundp 'eat)
+        (progn
+          (eat)
+          (rename-buffer "*eat-test*" t)
+          t)
+      (message "eat autoloads loaded but 'eat' function not found")
+      nil))
+   
+   ;; Try to install package
+   (t
+    (let ((buf (get-buffer-create "*eat-install-help*")))
+      (with-current-buffer buf
+        (erase-buffer)
+        (insert "EAT PACKAGE NOT AVAILABLE\n")
+        (insert "=========================\n\n")
+        (insert "The 'eat' terminal emulator is not installed.\n\n")
+        (insert "TO INSTALL:\n")
+        (insert "1. M-x package-refresh-contents RET\n")
+        (insert "2. M-x package-install RET eat RET\n\n")
+        (insert "ALTERNATIVES:\n")
+        (insert "• Use TRAMP SSH (C-SPC t t) - recommended for MFA\n")
+        (insert "• Try eshell (C-SPC t 1)\n")
+        (insert "• Try shell (C-SPC t 3)\n")
+        (insert "• Try term (C-SPC t 4)\n")
+        (insert "• Try ansi-term (C-SPC t 5)\n\n")
+        (insert "PACKAGE ARCHIVES CONFIGURED:\n")
+        (dolist (archive package-archives)
+          (insert (format "• %s: %s\n" (car archive) (cdr archive))))
+        (special-mode))
+      (switch-to-buffer buf)
+      nil))))
 
 (defun my/terminal-shell ()
   "Open shell (inferior shell process).

@@ -19,8 +19,10 @@
 
 ;; Package management - keep it minimal
 (require 'package)
-(setq package-archives '(("melpa" . "https://www.mirrorservice.org/sites/melpa.org/packages/")
-                         ("gnu" . "https://elpa.gnu.org/packages/")))
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("melpa-mirror" . "https://www.mirrorservice.org/sites/melpa.org/packages/")
+                         ("gnu" . "https://elpa.gnu.org/packages/")
+                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
 (package-initialize)
 
 ;; Load modules

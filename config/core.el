@@ -43,7 +43,10 @@
 ;; Update package list if needed
 (when (boundp 'package-archive-contents)
   (unless package-archive-contents
-    (package-refresh-contents)))
+    (message "Refreshing package archives...")
+    (condition-case err
+        (package-refresh-contents)
+      (error (message "Warning: Could not refresh package archives: %s" (error-message-string err))))))
 
 ;; Essential packages for terminal testing
 (defvar my/essential-packages
@@ -60,11 +63,22 @@
     eat)
   "Essential packages for terminal testing.")
 
-;; Install missing packages
+;; Install missing packages with error handling
+(defun my/install-package-safely (package)
+  "Install PACKAGE with error handling and retry logic."
+  (condition-case err
+      (progn
+        (message "Installing %s..." package)
+        (package-install package)
+        (message "✓ %s installed successfully" package)
+        t)
+    (error
+     (message "✗ Could not install %s: %s" package (error-message-string err))
+     nil)))
+
 (dolist (package my/essential-packages)
   (unless (package-installed-p package)
-    (message "Installing %s..." package)
-    (package-install package)))
+    (my/install-package-safely package)))
 
 ;;==============================================================================
 ;; WINDOWS-SPECIFIC FIXES
