@@ -4,18 +4,7 @@
 ;; Core configuration including package management, UI settings, editor behavior,
 ;; font configuration, and platform detection.
 
-;;==============================================================================
-;; PLATFORM DETECTION
-;;==============================================================================
 
-(defvar my/is-windows (memq system-type '(windows-nt ms-dos cygwin))
-  "Non-nil if running on Windows.")
-
-(defvar my/is-linux (eq system-type 'gnu/linux)
-  "Non-nil if running on Linux.")
-
-(defvar my/is-mac (eq system-type 'darwin)
-  "Non-nil if running on macOS.")
 
 ;;==============================================================================
 ;; STARTUP OPTIMIZATION
@@ -138,30 +127,26 @@ Useful after updating Emacs or when native compilation was disabled."
 
 (defvar my/default-font-size 130)
 
-;; Default font selection based on platform
+;; Default font selection
 (defvar my/default-font
-  (if my/is-windows
-      (font-spec :family "Cascadia Code"
-                 :weight 'normal
-                 :size 12)
-    (font-spec :family "CaskaydiaCove Nerd Font"
-               :weight 'semi-bold
-               :size 12)))
+  (font-spec :family "CaskaydiaCove Nerd Font"
+             :weight 'semi-bold
+             :size 12))
 
 (defun my/apply-fonts (&optional frame)
   "Apply fonts to FRAME (or selected frame)."
   (with-selected-frame (or frame (selected-frame))
     (set-frame-font my/default-font t t)
     (set-face-attribute 'default nil
-                        :family (if my/is-windows "Cascadia Code" "CaskaydiaCove Nerd Font")
-                        :weight (if my/is-windows 'normal 'semi-bold)
+                        :family "CaskaydiaCove Nerd Font"
+                        :weight 'semi-bold
                         :height my/default-font-size)
     (set-face-attribute 'fixed-pitch nil
-                        :family (if my/is-windows "Cascadia Code" "CaskaydiaCove Nerd Font")
-                        :weight (if my/is-windows 'normal 'semi-bold)
+                        :family "CaskaydiaCove Nerd Font"
+                        :weight 'semi-bold
                         :height my/default-font-size)
     (set-face-attribute 'variable-pitch nil
-                        :family (if my/is-windows "Cascadia Code" "CaskaydiaCove Nerd Font")
+                        :family "CaskaydiaCove Nerd Font"
                         :height my/default-font-size)))
 
 (my/apply-fonts)
@@ -230,6 +215,7 @@ Useful after updating Emacs or when native compilation was disabled."
 (setq idle-update-delay 0.0
       cursor-in-non-selected-windows nil
       highlight-nonselected-windows nil)
+
 
 ;;==============================================================================
 ;; EDITOR BEHAVIOR

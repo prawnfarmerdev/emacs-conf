@@ -3,8 +3,6 @@
 ;;; Commentary:
 ;; Helper functions used throughout the configuration.
 
-(require 'shell)
-
 ;;==============================================================================
 ;; HELPER FUNCTIONS
 ;;==============================================================================
@@ -151,160 +149,20 @@ creates README.md, and optionally creates GitHub repository using gh CLI."
       (dired project-dir)
       (message "Project created: %s" project-dir))))
 
-;;;###autoload
-(defun my/detect-shell ()
-  "Return appropriate shell command for current platform."
-  (cond
-   ((memq system-type '(windows-nt ms-dos cygwin))
-    (if (executable-find "powershell.exe") "powershell.exe" "cmd.exe"))
-   ((executable-find "pwsh") "pwsh")
-   (t "/bin/bash")))
-
-(defun my/shell-args (shell-name)
-  "Return shell arguments for SHELL-NAME.
-SHELL-NAME can be a string or nil. Returns nil for unknown shells."
-  (when (stringp shell-name)
-    (cond
-     ((string-match "powershell\\.exe\\|pwsh" shell-name)
-      '("-NoExit" "-NoLogo" "-NoProfile" "-Command" "-"))
-     ((string-match "cmd\\.exe" shell-name)
-      '("/k"))
-     (t nil))))
-
-(defun my/configure-shell-mode ()
-  "Configure shell mode for specific shell types.
-Sets comint variables for better PowerShell and general shell experience."
-  (when (derived-mode-p 'shell-mode)
-    ;; Skip configuration for PowerShell buffers created by powershell.el
-    ;; as they have their own configuration
-    (unless (string-match "\\*PowerShell\\*" (buffer-name))
-      (when (stringp explicit-shell-file-name)
-        (let ((shell-name (file-name-nondirectory explicit-shell-file-name)))
-          (cond
-           ((string-match "powershell\\.exe\\|pwsh" shell-name)
-            ;; PowerShell specific settings
-            (setq-local comint-process-echoes nil)  ; PowerShell echoes its own prompt
-            (setq-local comint-use-prompt-regexp t)
-            (setq-local comint-prompt-regexp "^PS.*> "))
-           ((string-match "cmd\\.exe" shell-name)
-            ;; cmd.exe settings
-            (setq-local comint-process-echoes t)
-            (setq-local comint-use-prompt-regexp t)
-            (setq-local comint-prompt-regexp "^[A-Z]:\\.*?> "))
-           (t
-            ;; Unix shell defaults
-            (setq-local comint-process-echoes nil)
-            (setq-local comint-use-prompt-regexp nil))))))))
-
-;; Run configuration when shell mode starts
-(with-eval-after-load 'shell
-  (add-hook 'shell-mode-hook #'my/configure-shell-mode))
+;;==============================================================================
+;; CLEAN TERMINAL FUNCTIONS (eshell + eat-eshell only)
+;;==============================================================================
 
 ;;;###autoload
-(defun my/open-shell-here ()
-  "Open shell in current buffer's directory with PowerShell detection.
-On Windows, uses powershell.el if available, otherwise powershell.exe.
-On Linux/macOS, uses pwsh if available, otherwise falls back to bash."
+(defun my/open-eshell-here ()
+  "Open eshell in current buffer's directory."
   (interactive)
   (let ((default-directory (my/current-dir)))
-    (cond
-     ;; Use powershell.el function if available and on Windows
-     ((memq system-type '(windows-nt ms-dos cygwin))
-      (condition-case err
-          (progn
-            ;; Try to load powershell.el if not already loaded
-            (unless (fboundp 'powershell)
-              (require 'powershell))
-            (powershell))
-        (error
-         ;; Fall back to generic shell if powershell.el fails
-         (message "powershell.el failed: %s, falling back to generic shell" 
-                  (error-message-string err))
-         (let ((explicit-shell-file-name (my/detect-shell))
-               (explicit-shell-args (my/shell-args explicit-shell-file-name)))
-           (shell)))))
-     ;; Otherwise use generic shell with detected shell
-     (t
-      (let ((explicit-shell-file-name (my/detect-shell))
-            (explicit-shell-args (my/shell-args explicit-shell-file-name)))
-        (shell))))))
-
-;;==============================================================================
-;; ANSI-TERM TERMINAL EMULATOR
-;;==============================================================================
-
-;;;###autoload
-(defun my/open-ansi-term-here ()
-  "Open ansi-term (terminal emulator) in current buffer's directory.
-Uses PowerShell on Windows, bash on Unix. Provides better terminal emulation
-than shell-mode for SSH and interactive programs."
-  (interactive)
-  (let ((default-directory (my/current-dir))
-        (shell (cond
-                ((eq system-type 'windows-nt)
-                 (if (executable-find "powershell.exe") 
-                     "powershell.exe"
-                   "cmd.exe"))
-                (t
-                 (or (executable-find "bash") "/bin/bash")))))
-    (ansi-term shell)))
-
-;; Configure term-mode for Windows SSH compatibility
-(defun my/configure-term-mode-windows ()
-  "Configure term-mode for Windows SSH compatibility."
-  (when (derived-mode-p 'term-mode)
-    (when (eq system-type 'windows-nt)
-      ;; Set up term-mode for better terminal emulation
-      (setq-local term-prompt-regexp "^[A-Z]:\\.*?> \\|^PS.*> ")
-      (setq-local term-escape-char ?\C-c)
-      ;; Note: term-mode provides better pseudo-terminal emulation than shell-mode
-      (message "term-mode: For SSH on Windows, use 'ssh -t hostname'"))))
-
-(add-hook 'term-mode-hook #'my/configure-term-mode-windows)
-
-;;==============================================================================
-;; EAT TERMINAL EMULATOR
-;;==============================================================================
-
-;;;###autoload
-(defun my/open-eat-here ()
-  "Open eat (Emulated Advanced Terminal) in current buffer's directory.
-Eat is a terminal emulator with excellent Windows and SSH support.
-On Windows, provides proper shell arguments to avoid spawn errors."
-  (interactive)
-  (let ((default-directory (my/current-dir))
-        (shell (cond
-                ((eq system-type 'windows-nt)
-                 (if (executable-find "powershell.exe")
-                     "powershell.exe"
-                   "cmd.exe"))
-                (t
-                 (or (executable-find "bash") "/bin/bash"))))
-        (shell-args (cond
-                     ((eq system-type 'windows-nt)
-                      (if (executable-find "powershell.exe")
-                          '("-NoExit" "-NoLogo" "-NoProfile")
-                        '("/k")))
-                     (t
-                      nil))))
-    (condition-case err
-        (progn
-          ;; Ensure eat is loaded
-          (require 'eat nil t)
-          (if shell-args
-              ;; Use eat-make to pass shell arguments
-              (eat-make (generate-new-buffer-name "*eat*") shell nil shell-args)
-            ;; No arguments, use plain eat
-            (eat shell)))
-      (error
-       (message "eat failed: %s, falling back to ansi-term" (error-message-string err))
-       (my/open-ansi-term-here)))))
+    (eshell t)))
 
 ;;;###autoload
 (defun my/open-eat-eshell-here ()
-  "Open eshell with eat terminal emulation enabled.
-This provides excellent terminal emulation within eshell, especially
-for Windows SSH support."
+  "Open eshell with eat terminal emulation enabled."
   (interactive)
   (let ((default-directory (my/current-dir)))
     ;; Ensure eat is loaded
@@ -318,77 +176,6 @@ for Windows SSH support."
       ;; If eat is not available, fall back to regular eshell
       (message "eat package not available, using regular eshell")
       (eshell t))))
-
-;; Configure eat for Windows SSH compatibility
-(defun my/configure-eat-mode-windows ()
-  "Configure eat-mode for Windows SSH compatibility."
-  (when (derived-mode-p 'eat-mode)
-    (when (eq system-type 'windows-nt)
-      ;; Eat provides excellent terminal emulation, SSH should work well
-      (setq-local eat-term-prompt-regexp "^[A-Z]:\\.*?> \\|^PS.*> ")
-      ;; Eat handles pseudo-terminal allocation better than shell-mode
-      (message "eat-mode: SSH should work without -t flag on Windows"))))
-
-(with-eval-after-load 'eat
-  (add-hook 'eat-mode-hook #'my/configure-eat-mode-windows)
-  
-  ;; Windows workaround for eat's hardcoded /usr/bin/env sh -c command
-  (when (eq system-type 'windows-nt)
-    ;; Define advice function
-    (defun my/eat-exec-windows-advice (orig-fun buffer name command startfile switches)
-      "Adjust eat-exec arguments for Windows compatibility."
-      (if (string= command "/usr/bin/env")
-          ;; Replace Unix-style command with Windows shell
-          (let* ((shell (if (executable-find "powershell.exe")
-                            "powershell.exe"
-                          "cmd.exe"))
-                 (args (if (executable-find "powershell.exe")
-                           '("-NoExit" "-NoLogo" "-NoProfile")
-                         '("/k"))))
-            (funcall orig-fun buffer name shell startfile args))
-        ;; Otherwise call original
-        (funcall orig-fun buffer name command startfile switches)))
-    ;; Add advice only once
-    (unless (advice-member-p #'my/eat-exec-windows-advice 'eat-exec)
-      (advice-add 'eat-exec :around #'my/eat-exec-windows-advice))))
-
-;;==============================================================================
-;; UNIFIED TERMINAL FUNCTION
-;;==============================================================================
-
-;;;###autoload
-(defun my/open-best-terminal-here ()
-  "Open the best available terminal in current directory.
-Tries: eat -> vterm (Unix only) -> ansi-term -> powershell.el -> shell."
-  (interactive)
-  (let ((default-directory (my/current-dir)))
-    (cond
-     ;; eat (recommended for Windows SSH compatibility)
-     ((fboundp 'eat)
-      (my/open-eat-here))
-     
-     ;; vterm (Unix/Linux only - not recommended for Windows)
-     ((and (not (eq system-type 'windows-nt))
-           (fboundp 'vterm))
-      (vterm))
-     
-     ;; ansi-term (built-in terminal emulator)
-     ((fboundp 'ansi-term)
-      (my/open-ansi-term-here))
-     
-     ;; Windows: try powershell.el first
-     ((and (eq system-type 'windows-nt)
-           (condition-case nil
-               (progn
-                 (unless (fboundp 'powershell)
-                   (require 'powershell))
-                 t)
-             (error nil)))
-      (powershell))
-     
-     ;; Fall back to shell
-     (t
-      (my/open-shell-here)))))
 
 (provide 'helpers)
 ;;; helpers.el ends here

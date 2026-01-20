@@ -20,9 +20,7 @@
 (use-package magit-delta
   :ensure t
   :after magit
-  :hook (magit-mode . magit-delta-mode)
-  :config
-  (setq magit-delta-default-dark-theme "solarized-dark"))
+  :hook (magit-mode . magit-delta-mode))
 
 (use-package magit-todos
   :ensure t

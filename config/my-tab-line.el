@@ -69,22 +69,7 @@ Includes file buffers, dired buffers, and terminal buffers."
 (setq tab-line-format-function
       (lambda (tabs)
         (list (my/tab-line-format tabs))))
-;; Style tab-line to match your solarized theme
-(set-face-attribute 'tab-line nil
-                    :background "#000000"
-                    :foreground "#859900"
-                    :height 1.0
-                    :box nil)
-(set-face-attribute 'tab-line-tab-current nil
-                    :background "#000000"
-                    :foreground "#2aa198"
-                    :weight 'bold
-                    :box nil)
-(set-face-attribute 'tab-line-tab-inactive nil
-                    :background "#000000"
-                    :foreground "#586e75"
-                    :weight 'normal
-                     :box nil)
+
 
 ;; Close current tab in tab-line
 (defun my/tab-line-close-current-tab ()

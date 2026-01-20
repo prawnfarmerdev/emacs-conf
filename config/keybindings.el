@@ -14,18 +14,19 @@
   :config
   (setq general-warn-on-override nil)
   
-  ;; NORMAL/VISUAL MODE (C-SPC leader) - Vim-style with Ctrl+Space
-  ;; Use 'global instead of 'override for better compatibility
-  ;; Unbind C-SPC from set-mark-command to use as leader
-  (global-unset-key (kbd "C-SPC"))
-  (general-define-key
-   :states '(normal insert visual emacs)
-   :keymaps 'global
-   "C-@" 'set-mark-command)
+   ;; ALL EVIL MODES (C-SPC leader) - Vim-style with Ctrl+Space
+   ;; Use 'global instead of 'override for better compatibility
+   ;; Unbind C-SPC from set-mark-command to use as leader
+   (general-unbind :states '(normal insert visual emacs motion operator replace) "C-SPC")
+   (general-unbind "C-SPC")
+    (general-define-key
+     :states '(normal insert visual emacs motion operator replace)
+     :keymaps 'global
+     "C-@" 'set-mark-command)
   (general-create-definer my-leader-def
-    :states '(normal insert visual emacs)
-    :keymaps 'global
-    :prefix "C-SPC")
+     :states '(normal insert visual emacs motion operator replace)
+     :keymaps 'global
+     :prefix "C-SPC")
   
   (my-leader-def
     ;; Files
@@ -116,11 +117,16 @@
     "qq" '(save-buffers-kill-terminal :which-key "quit emacs"))
 
   ;; Also define global prefix for non-evil buffers
-  (general-create-definer my-leader-global-def
+   (general-create-definer my-leader-global-def
+     :keymaps 'global
+     :prefix "C-SPC")
+   
+   ;; Bind C-@ to set-mark-command in global keymap
+   (general-define-key
     :keymaps 'global
-    :prefix "C-SPC")
-  
-  (my-leader-global-def
+    "C-@" 'set-mark-command)
+   
+   (my-leader-global-def
     ;; Files
     "f"  '(:ignore t :which-key "files")
      "ff" '(find-file :which-key "find file")
@@ -213,10 +219,10 @@
   ;; Numbered tab jumping (C-SPC 1-9) - evil states
   (dotimes (i 9)
     (let ((n (1+ i)))
-      (general-define-key
-       :states '(normal insert visual emacs)
-       :keymaps 'global
-       (concat "C-SPC " (number-to-string n))
+       (general-define-key
+        :states '(normal insert visual emacs motion operator replace)
+        :keymaps 'global
+        (concat "C-SPC " (number-to-string n))
        `(lambda ()
           (interactive)
           (let* ((tabs (funcall tab-line-tabs-function))
@@ -261,18 +267,18 @@
   
   ;; Font size controls (work in all modes) - evil states
   (general-define-key
-   :states '(normal insert visual emacs)
-   :keymaps 'global
-   "C-=" 'text-scale-increase
-   "C--" 'text-scale-decrease
-   "C-0" 'text-scale-adjust)
+    :states '(normal insert visual emacs motion operator replace)
+    :keymaps 'global
+    "C-=" 'text-scale-increase
+    "C--" 'text-scale-decrease
+    "C-0" 'text-scale-adjust)
 
   ;; C-n/C-p for movement - evil states
   (general-define-key
-   :states '(normal insert visual emacs)
-   :keymaps 'global
-   "C-n" 'next-line
-   "C-p" 'previous-line)
+    :states '(normal insert visual emacs motion operator replace)
+    :keymaps 'global
+    "C-n" 'next-line
+    "C-p" 'previous-line)
 
   ;; Font size controls (work in all modes) - global
   (general-define-key
@@ -289,18 +295,18 @@
 
     ;; C-f for tmux sessionizer (global) - evil states
     (general-define-key
-     :states '(normal insert visual emacs)
-     :keymaps 'global
-     "C-f" 'my/consult-sessionizer)
+      :states '(normal insert visual emacs motion operator replace)
+      :keymaps 'global
+      "C-f" 'my/consult-sessionizer)
     
     ;; C-S-f for SSH sessionizer (global) - evil states  
     (when (fboundp 'my/ssh-sessionizer)
       (condition-case nil
-          (general-define-key
-           :states '(normal insert visual emacs)
-           :keymaps 'global
-           "C-S-f" 'my/ssh-sessionizer
-           "C-c C-s" 'my/ssh-sessionizer)
+           (general-define-key
+            :states '(normal insert visual emacs motion operator replace)
+            :keymaps 'global
+            "C-S-f" 'my/ssh-sessionizer
+            "C-c C-s" 'my/ssh-sessionizer)
         (error nil))
       ;; Note: C-S-f may be captured by terminal emulators; alternative binding C-c C-s
       )
@@ -308,15 +314,15 @@
     ;; C-S-p for GitHub PR (global) - evil states
     (when (fboundp 'my/open-github-pr)
       (general-define-key
-       :states '(normal insert visual emacs)
-       :keymaps 'global
-       "C-S-p" 'my/open-github-pr))
+        :states '(normal insert visual emacs motion operator replace)
+        :keymaps 'global
+        "C-S-p" 'my/open-github-pr))
     
     ;; C-S-n for new project (global) - evil states
     (general-define-key
-     :states '(normal insert visual emacs)
-     :keymaps 'global
-     "C-S-n" 'my/create-new-project)
+      :states '(normal insert visual emacs motion operator replace)
+      :keymaps 'global
+      "C-S-n" 'my/create-new-project)
     
     ;; C-f for tmux sessionizer (global) - global
     (general-define-key
@@ -348,6 +354,64 @@
  ;; Quick access bindings in normal mode (no prefix)
  (with-eval-after-load 'evil
     (define-key evil-normal-state-map (kbd "-") #'my/open-current-dir-dired))
+
+;; Tab navigation functions
+(require 'cl-lib)
+(defun my/tab-line-next-tab ()
+  "Switch to next tab in tab-line."
+  (interactive)
+  (let* ((tabs (funcall tab-line-tabs-function))
+         (current-index (cl-position (current-buffer) tabs :test #'eq))
+         (next-index (if current-index
+                         (mod (1+ current-index) (length tabs))
+                       0)))
+    (when (and tabs (> (length tabs) 0))
+      (switch-to-buffer (nth next-index tabs)))))
+
+(defun my/tab-line-prev-tab ()
+  "Switch to previous tab in tab-line."
+  (interactive)
+  (let* ((tabs (funcall tab-line-tabs-function))
+         (current-index (cl-position (current-buffer) tabs :test #'eq))
+         (prev-index (if current-index
+                         (mod (1- current-index) (length tabs))
+                       (1- (length tabs)))))
+    (when (and tabs (> (length tabs) 0))
+      (switch-to-buffer (nth prev-index tabs)))))
+
+;; Tab navigation bindings
+ (general-define-key
+  :states '(normal insert visual emacs motion operator replace)
+  :keymaps 'global
+  "C-SPC <right>" 'my/tab-line-next-tab
+  "C-SPC <left>" 'my/tab-line-prev-tab)
+
+(general-define-key
+ :keymaps 'global
+ "C-SPC <right>" 'my/tab-line-next-tab
+ "C-SPC <left>" 'my/tab-line-prev-tab)
+
+;; Alternative global tab navigation (without leader)
+ (general-define-key
+  :states '(normal insert visual emacs motion operator replace)
+  :keymaps 'global
+  "M-<right>" 'my/tab-line-next-tab
+  "M-<left>" 'my/tab-line-prev-tab)
+
+(general-define-key
+ :keymaps 'global
+ "M-<right>" 'my/tab-line-next-tab
+ "M-<left>" 'my/tab-line-prev-tab)
+
+;; Test binding for C-SPC leader
+ (general-define-key
+  :states '(normal insert visual emacs motion operator replace)
+  :keymaps 'global
+  "C-SPC t" '(lambda () (interactive) (message "C-SPC t test binding works!")))
+
+(general-define-key
+ :keymaps 'global
+ "C-SPC t" '(lambda () (interactive) (message "C-SPC t test binding works!")))
 
 (provide 'keybindings)
 ;;; keybindings.el ends here
