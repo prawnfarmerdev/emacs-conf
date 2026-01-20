@@ -66,19 +66,13 @@
 
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("melpa-mirror" . "https://www.mirrorservice.org/sites/melpa.org/packages/")
-                         ("gnu" . "https://elpa.gnu.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+                         ("gnu" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
 
-;; Bootstrap use-package with error handling
+;; Bootstrap use-package
 (unless (package-installed-p 'use-package)
-  (condition-case err
-      (progn
-        (package-refresh-contents)
-        (package-install 'use-package))
-    (error
-     (message "Warning: Could not install use-package: %s" (error-message-string err)))))
+  (package-refresh-contents)
+  (package-install 'use-package))
 
 ;; EVIL MODE - VIM KEYBINDINGS
 ;;==============================================================================
