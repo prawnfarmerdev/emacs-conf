@@ -112,41 +112,11 @@
       (insert "PATH Environment:\n")
       (insert (format "PATH: %s\n\n" (getenv "PATH")))
       
-      (insert "PACKAGE MANAGEMENT\n")
-      (insert "=================\n\n")
+      (insert "Package Availability:\n")
+      (dolist (pkg '(eat))
+        (insert (format "%s: %s\n" pkg (if (require pkg nil t) "AVAILABLE" "NOT AVAILABLE"))))
       
-      (insert "Package Archives Configured:\n")
-      (if package-archives
-          (dolist (archive package-archives)
-            (insert (format "• %s: %s\n" (car archive) (cdr archive))))
-        (insert "✗ No package archives configured!\n"))
-      (insert "\n")
-      
-      (insert "Essential Packages Status:\n")
-      (when (boundp 'my/essential-packages)
-        (dolist (pkg my/essential-packages)
-          (let ((installed (package-installed-p pkg))
-                (available (assoc pkg package-archive-contents))
-                (loaded (require pkg nil t)))
-            (insert (format "• %s: " pkg))
-            (cond
-             ((and installed loaded) (insert "✓ Installed & loaded\n"))
-             (installed (insert "✓ Installed (not loaded)\n"))
-             (available (insert "○ Available in archives\n"))
-             (t (insert "✗ Not in archives\n"))))))
-      (insert "\n")
-      
-      (insert "Eat Package Details:\n")
-      (let ((eat-dir (locate-library "eat")))
-        (if eat-dir
-            (progn
-              (insert (format "✓ Eat library found: %s\n" eat-dir))
-              (insert (format "  Function 'eat' bound: %s\n" (fboundp 'eat)))
-              (insert (format "  Autoloads file: %s\n" (locate-library "eat-autoloads"))))
-          (insert "✗ Eat library not found in load path\n")))
-      (insert "\n")
-      
-      (insert "Common Windows Shell Paths:\n")
+      (insert "\nCommon Windows Shell Paths:\n")
       (dolist (path '("C:/Program Files/Git/bin/bash.exe"
                       "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
                       "C:/Windows/System32/cmd.exe"
@@ -157,13 +127,12 @@
       (insert (format "tramp-default-method: %s\n" (bound-and-true-p tramp-default-method)))
       (insert (format "tramp-default-user: %s\n\n" (bound-and-true-p tramp-default-user)))
       
-      (insert "RECOMMENDED ACTIONS:\n")
-      (insert "1. If eat not installed: M-x package-refresh-contents then M-x package-install eat\n")
-      (insert "2. If package archives empty: Check network or try different mirror\n")
-      (insert "3. Use TRAMP for SSH with MFA (C-SPC t t) - works without eat\n")
-      (insert "4. Ensure Git for Windows is installed at C:/Program Files/Git/\n")
-      (insert "5. Run Emacs inside Wezterm for best terminal emulation\n")
-      (insert "6. Press F8 to fix 'child process invalid argument' errors\n")
+      (insert "Recommended Fixes:\n")
+      (insert "1. Ensure Git for Windows is installed at C:/Program Files/Git/\n")
+      (insert "2. Use TRAMP for SSH with MFA (C-SPC t t)\n")
+      (insert "3. Check PATH includes Git/bin directory\n")
+      (insert "4. Try eat terminal if available (M-x package-install eat)\n")
+      (insert "5. Run Emacs inside Wezterm for best results\n")
       
       (special-mode))
     (switch-to-buffer buf)))
