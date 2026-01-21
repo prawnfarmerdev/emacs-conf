@@ -131,7 +131,7 @@ Useful after updating Emacs or when native compilation was disabled."
 (defvar my/default-font
   (font-spec :family "CaskaydiaCove Nerd Font"
              :weight 'semi-bold
-             :size 12))
+             :size 18))
 
 (defun my/apply-fonts (&optional frame)
   "Apply fonts to FRAME (or selected frame)."
@@ -166,55 +166,7 @@ Useful after updating Emacs or when native compilation was disabled."
 (setq display-line-numbers-type 'relative)
 (setq display-line-numbers-width 5)
 (setq display-line-numbers-grow-only nil)
-
-;; Disable line numbers in terminal buffers
-(add-hook 'eshell-mode-hook (lambda () (display-line-numbers-mode -1)))
-(add-hook 'term-mode-hook (lambda () (display-line-numbers-mode -1)))
-
-(add-hook 'shell-mode-hook (lambda () (display-line-numbers-mode -1)))
-;; Disable line highlighting in terminal buffers
-(add-hook 'eshell-mode-hook (lambda () (hl-line-mode -1)))
-(add-hook 'term-mode-hook (lambda () (hl-line-mode -1)))
-
-(add-hook 'shell-mode-hook (lambda () (hl-line-mode -1)))
-;; Set black background for terminal input
-(defun my/terminal-set-black-background ()
-  "Set black background for terminal buffers."
-  (message "Setting black background for %s" (buffer-name))
-  ;; Core faces
-  (face-remap-add-relative 'default :background "#000000")
-  (face-remap-add-relative 'hl-line :background "#000000")
-  (face-remap-add-relative 'region :background "#073642")
-  ;; Eshell-specific faces if available
-  (when (fboundp 'eshell-mode)
-    (dolist (face '(eshell-prompt-face
-                    eshell-ls-directory-face
-                    eshell-ls-executable-face
-                    eshell-ls-missing-face
-                    eshell-ls-product-face
-                    eshell-ls-readonly-face
-                    eshell-ls-special-face
-                    eshell-ls-symlink-face
-                    eshell-ls-unreadable-face
-                    eshell-ls-archive-face
-                    eshell-ls-backup-face
-                    eshell-ls-clutter-face
-                    eshell-ls-date-face
-                    eshell-ls-missing-face
-                    eshell-ls-permissions-face
-                    eshell-ls-product-face
-                    eshell-ls-size-face
-                    eshell-ls-todo-face))
-      (when (facep face)
-        (face-remap-add-relative face :background "#000000")))))
-(add-hook 'eshell-mode-hook #'my/terminal-set-black-background)
-(add-hook 'term-mode-hook #'my/terminal-set-black-background)
-
-(add-hook 'shell-mode-hook #'my/terminal-set-black-background)
-
-(setq idle-update-delay 0.0
-      cursor-in-non-selected-windows nil
-      highlight-nonselected-windows nil)
+(setq ring-bell-function 'ignore)
 
 
 ;;==============================================================================

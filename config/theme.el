@@ -1,4 +1,4 @@
-;;; theme.el --- Menudo theme (black backgrounds, gray text, blue highlights) -*- lexical-binding: t -*-
+;;; theme.el --- Menudo theme (black iackgrounds, gray text, blue highlights) -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; Menudo theme - A custom dark theme featuring:
@@ -34,7 +34,7 @@
        (sunflower-yellow   "#edb211")
        (burnt-orange       "#de451f")
        (sky-blue           "#2895c7")
-       (bright-red         "#ff0000")
+       (bright-red         "#dc322f")
        (fresh-green        "#66bc11")
        (lime-green         "#003939")
        (vivid-vermilion    "#f0500c")
@@ -86,7 +86,7 @@
     ;; Mode Line
     `(mode-line          ((t (:background ,mode-line-background-active :foreground ,mode-line-foreground-active :box (:line-width 1 :color ,mode-line-border :style nil)))))
     `(mode-line-inactive ((t (:background ,pure-black :foreground ,light-bronze :box (:line-width 1 :color ,mode-line-border :style nil)))))  ; Pure black background with gray text
-    `(mode-line-buffer-id ((t (:foreground ,bright-red :weight bold))))
+    `(mode-line-buffer-id ((t (:foreground ,bright-orange :weight bold))))
     
     ;; Git / Magit
     `(magit-branch-local  ((t (:foreground ,fresh-green))))
@@ -102,7 +102,7 @@
    `(ido-only-match  ((t (:foreground ,vivid-vermilion))))
    
     ;; Minibuffer & Completion
-     `(vertico-current            ((t (:background ,lime-green :foreground ,pure-black))))
+     `(vertico-current            ((t (:background ,lime-green :foreground ,dim-gray))))
     `(orderless-match-face-0     ((t (:foreground ,golden-yellow :weight bold))))
     `(orderless-match-face-1     ((t (:foreground ,sky-blue :weight bold))))
     `(orderless-match-face-2     ((t (:foreground ,fresh-green :weight bold))))
