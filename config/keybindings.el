@@ -125,26 +125,7 @@
                  (buf (nth ,(1- n) tabs)))
             (when buf (switch-to-buffer buf)))))))
 
-  ;; Font size with line number scaling
-  (defvar-local my/line-number-scale-cookies nil)
-  
-  (defun my/update-line-number-scale ()
-    (dolist (cookie my/line-number-scale-cookies)
-      (face-remap-remove-relative cookie))
-    (setq my/line-number-scale-cookies nil)
-    (let ((amount (text-scale-mode-amount)))
-      (when (not (zerop amount))
-        (push (face-remap-add-relative 'line-number 
-                :height (expt text-scale-mode-step amount))
-              my/line-number-scale-cookies)
-        (push (face-remap-add-relative 'line-number-current-line 
-                :height (expt text-scale-mode-step amount))
-              my/line-number-scale-cookies))))
-  
-  (advice-add 'text-scale-increase :after #'my/update-line-number-scale)
-  (advice-add 'text-scale-decrease :after #'my/update-line-number-scale)
-  (advice-add 'text-scale-adjust :after #'my/update-line-number-scale)
-  
+ 
   (general-define-key
    :states '(normal insert visual emacs motion operator replace)
    :keymaps 'global

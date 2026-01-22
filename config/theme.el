@@ -85,7 +85,7 @@
 
     ;; Mode Line
     `(mode-line          ((t (:background ,mode-line-background-active :foreground ,mode-line-foreground-active :box (:line-width 1 :color ,mode-line-border :style nil)))))
-    `(mode-line-inactive ((t (:background ,pure-black :foreground ,light-bronze :box (:line-width 1 :color ,mode-line-border :style nil)))))  ; Pure black background with gray text
+    `(mode-line-inactive ((t (:background ,dim-gray :foreground ,light-bronze :box (:line-width 1 :color ,mode-line-border :style nil)))))  ; Pure black background with gray text
     `(mode-line-buffer-id ((t (:foreground ,bright-orange :weight bold))))
     
     ;; Git / Magit
