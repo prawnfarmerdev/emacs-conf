@@ -226,7 +226,11 @@ Useful after updating Emacs or when native compilation was disabled."
       kept-new-versions 6
       kept-old-versions 2
       version-control t
-      auto-save-default t
+      make-backup-files nil
+      create-lockfiles nil
+      auto-save-default nil
+      auto-save-visited-file-name nil
+      auto-save-list-file-name nil
       auto-save-timeout 20
       auto-save-interval 200)
 
