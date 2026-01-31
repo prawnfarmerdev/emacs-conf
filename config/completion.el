@@ -8,80 +8,172 @@
 ;; COMPLETION FRAMEWORK
 ;;==============================================================================
 
+;; IDO-like behavior for file completion
+(setq read-file-name-completion-ignore-case t
+      completion-ignore-case t
+      completion-flex-nospace t
+      completion-pcm-word-delimiters "-_./| "
+      completion-pcm-complete-word-inserts-delimiters t)
+
+;;; Vertico - vertical completion UI
 (use-package vertico
   :ensure t
   :init
-  (vertico-mode)
+  (vertico-mode 1)
   :config
-  (set-face-attribute 'minibuffer-prompt nil :height 1.0)
-  (add-hook 'minibuffer-setup-hook
-            (lambda ()
-              (setq-local face-remapping-alist
-                          '((default :height 1.0))))))
+  (setq vertico-cycle t  ; Cycle through candidates
+        vertico-count 10) ; Show 10 lines by default
+  ;; Tab completion in vertico
+  (define-key vertico-map (kbd "TAB") #'minibuffer-complete))
 
 (use-package vertico-multiform
+  :ensure nil
   :after vertico
   :config
-  (vertico-multiform-mode)
-  (setq vertico-multiform-categories
-        '((consult-grep (vertico-grid . (:columns 2)))))
-  (setq vertico-grid-separator "    "))
+  (when (fboundp 'vertico-multiform-mode)
+    (vertico-multiform-mode)
+    (setq vertico-multiform-categories
+          '((consult-grep (vertico-grid . (:columns 2)))))
+    (setq vertico-grid-separator "    ")))
 
+;;; Orderless - flexible matching (fuzzy search)
 (use-package orderless
   :ensure t
-  :custom
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion))))
   :config
+  (setq completion-styles '(orderless partial-completion basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles orderless partial-completion basic))))
   (setq orderless-matching-styles '(orderless-flex
                                     orderless-regexp
                                     orderless-literal)
         orderless-component-separator "[ &]"
         orderless-style-dispatchers nil))
 
+;;; Marginalia - rich annotations in minibuffer
+(use-package marginalia
+  :ensure t
+  :init
+  (marginalia-mode 1))
+
+;;; Consult - enhanced commands with preview
 (use-package consult
   :ensure t
-  :demand t  ; Load immediately to avoid consult--read errors
-
-  :bind (("C-x b" . consult-buffer)
+  :bind (;; C-c bindings (mode-specific-map)
+         ("C-c h" . consult-history)
+         ("C-c m" . consult-mode-command)
+         ("C-c k" . consult-kmacro)
+         ;; C-x bindings (ctl-x-map)
+          ("C-x M-:" . consult-complex-command)
+           ("C-x C-f" . find-file)
+          ("C-x b" . consult-buffer)
+         ("C-x 4 b" . consult-buffer-other-window)
+         ("C-x 5 b" . consult-buffer-other-frame)
+         ("C-x r b" . consult-bookmark)
+         ;; M-g bindings (goto-map)
          ("M-g g" . consult-goto-line)
-         ("M-g i" . consult-imenu))
-  :config
-   (define-key vertico-map (kbd "C-l") #'consult-preview-atpoint)
-   
-   ;; Enable preview for all consult commands
+         ("M-g M-g" . consult-goto-line)
+         ("M-g o" . consult-outline)
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ;; M-s bindings (search-map)
+         ("M-s d" . consult-find)
+         ("M-s D" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s k" . consult-keep-lines)
+          ("M-s u" . consult-focus-lines)
+          ("M-s /" . my/consult-ripgrep-current-dir)
+          ;; Other custom bindings
+          ("M-y" . consult-yank-pop))
+   :config
+   ;; Preview key
    (setq consult-preview-key 'any
          consult-preview-max-size 1.0400
          consult-preview-raw-size 307200)
-   
-    ;; Configure consult-ripgrep for better performance
-    (setq consult-ripgrep-args
-          '("rg" "--null" "--line-buffered" "--color=never" "--max-columns=1000"
-            "--path-separator" "/" "--smart-case" "--no-heading" "--with-filename"
-            "--line-number" "--search-zip" "--hidden" "-g" "!.git/")))
+   ;; Narrow key
+   (setq consult-narrow-key "<")
+   ;; Configure consult-ripgrep for better performance
+   (setq consult-ripgrep-args
+         '("rg" "--null" "--line-buffered" "--color=never" "--max-columns=1000"
+           "--path-separator" "/" "--smart-case" "--no-heading" "--with-filename"
+           "--line-number" "--search-zip" "--hidden" "-g" "!.git/"))
+   ;; Configure consult-find for recursive file search
+   (setq consult-find-args
+         '("find" "." "-type" "f" "(" "-path" "*/.git/*" "-o" "-path" "*/.svn/*" "-o" "-path" "*/.hg/*" ")" "-prune" "-o" "-type" "f" "-print"))
+    ;; Configure consult-fd for faster recursive file search
+    (setq consult-fd-args '("fd" "--type" "f" "--hidden" "--exclude" ".git"))
 
+     (define-key vertico-map (kbd "C-l") #'consult-preview-atpoint))
+
+;;; Custom find-file with recursive search
+(defun my/find-file-recursive (&optional dir)
+  "Find file recursively using consult-find (requires 'find' command).
+When called with prefix argument, prompt for starting directory.
+Otherwise start from current directory.
+If 'find' command is not available, falls back to regular find-file."
+  (interactive "P")
+  (if (executable-find "find")
+      (if dir
+          (consult-find (read-directory-name "Start from directory: "))
+        (consult-find default-directory))
+    (message "'find' command not found. Using regular find-file.")
+    (call-interactively #'find-file)))
+
+;;; Find file with fd (fast recursive search)
+(defun my/find-file-fd (&optional dir)
+  "Find file recursively using fd (faster alternative to find).
+When called with prefix argument, prompt for starting directory.
+Otherwise start from home directory (~/).
+If fd command is not available, falls back to consult-find."
+  (interactive "P")
+  (let ((root-dir (if dir
+                      (read-directory-name "Search from directory: ")
+                    (expand-file-name "~"))))
+    (if (executable-find "fd")
+        (let ((default-directory root-dir))
+          (consult-fd ""))
+      (message "fd command not found. Using consult-find instead.")
+      (consult-find root-dir))))
+
+;;; M-s f prefix for file searches
+(defvar my-search-file-map (make-sparse-keymap)
+  "Keymap for file searches under M-s f.")
+(define-key my-search-file-map (kbd "f") 'my/find-file-fd)
+(define-key my-search-file-map (kbd "d") 'my/consult-find-current-dir)
+(when (boundp 'search-map)
+  (define-key search-map (kbd "f") my-search-file-map))
+
+;;; Embark - contextual actions
 (use-package embark
- :ensure t
- :bind
- (("C-." . embark-act)
-  ("C-," . embark-dwim))
- :config
- (setq embark-quit-after-action nil)
- (add-to-list 'display-buffer-alist
-              '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                nil (window-parameters (mode-line-format . none)))))
+  :ensure t
+  :bind (("C-." . embark-act)
+         ("C-;" . embark-dwim)
+         ("C-h B" . embark-bindings))
+   :config
+   (setq embark-quit-after-action nil)
+   ;; Hide the mode line of the Embark live/completions buffers
+   (add-to-list 'display-buffer-alist
+                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                  nil
+                  (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
   :ensure t
   :after (embark consult)
-  :config
-  (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode))
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
-(use-package marginalia
+;;; Enable savehist-mode for command history
+(use-package savehist
   :ensure t
   :init
-  (marginalia-mode))
+  (savehist-mode 1))
 
+;; Keep helpful since it's referenced in keybindings.el
 (use-package helpful
   :ensure t
   :defer t
@@ -97,7 +189,7 @@
 ;; Show completion list when multiple options exist
 (setq completion-auto-help t
       completion-auto-select t
-      completion-cycle-threshold nil)
+      completion-cycle-threshold t)
 
 (provide 'completion)
 ;;; completion.el ends here

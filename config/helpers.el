@@ -145,9 +145,82 @@ creates README.md, and optionally creates GitHub repository using gh CLI."
           ;; Wait a moment for push to complete
           (sleep-for 1)))
       
-      ;; Open the new project directory in dired
+       ;; Open the new project directory in dired
       (dired project-dir)
       (message "Project created: %s" project-dir))))
+
+;;==============================================================================
+;; ANSI COLOR SUPPORT FOR COMPILATION BUFFERS (Tsoding adaptation)
+;;==============================================================================
+
+;;;###autoload
+(defun my/colorize-compilation-buffer ()
+  "Add ANSI color support to compilation buffers.
+This enables colors in compilation output (like cargo build, npm run, etc.)
+by enabling `ansi-color-for-comint-mode' in compilation shells."
+  (interactive)
+  (require 'ansi-color)
+  ;; Enable ANSI color interpretation in compilation buffers
+  (ansi-color-for-comint-mode-on)
+  ;; Also ensure compilation buffers use the ansi-color filter
+  (add-hook 'compilation-filter-hook 'ansi-color-process-output))
+
+;; Add colorization to compilation buffers automatically
+(add-hook 'compilation-mode-hook #'my/colorize-compilation-buffer)
+
+;;==============================================================================
+;; TEXT EDITING UTILITIES (Tsoding adaptations)
+;;==============================================================================
+
+;;;###autoload
+(defun my/duplicate-line ()
+  "Duplicate current line.
+If region is active, duplicate the region instead."
+  (interactive)
+  (if (use-region-p)
+      (let ((beg (region-beginning))
+            (end (region-end)))
+        (copy-region-as-kill beg end)
+        (goto-char end)
+        (newline)
+        (yank)
+        (goto-char (+ end (- (point) end))))
+    (let ((col (current-column))
+          (line (thing-at-point 'line t)))
+      (end-of-line)
+      (newline)
+      (insert line)
+      (move-to-column col))))
+
+;;;###autoload  
+(defun my/unfill-paragraph ()
+  "Unfill paragraph at point.
+Convert a multi-line paragraph into a single line."
+  (interactive)
+  (let ((fill-column (point-max)))
+    (fill-paragraph nil t)))
+
+;;==============================================================================
+;; WHITESPACE HANDLING
+;;==============================================================================
+
+;;;###autoload
+(defun my/delete-trailing-whitespace ()
+  "Delete trailing whitespace in current buffer.
+Skips certain modes where trailing whitespace is meaningful."
+  (interactive)
+  ;; Skip modes where trailing whitespace is meaningful
+  (unless (or (derived-mode-p 'markdown-mode)
+              (derived-mode-p 'org-mode)
+              (derived-mode-p 'diff-mode)
+              (derived-mode-p 'git-commit-mode))
+    (delete-trailing-whitespace)))
+
+;; Add hook to delete trailing whitespace before saving
+(add-hook 'before-save-hook #'my/delete-trailing-whitespace)
+
+;; Optional: Show trailing whitespace in programming modes
+(add-hook 'prog-mode-hook (lambda () (setq show-trailing-whitespace t)))
 
 ;;==============================================================================
 ;; CLEAN TERMINAL FUNCTIONS (eshell + eat-eshell only)
@@ -176,6 +249,27 @@ creates README.md, and optionally creates GitHub repository using gh CLI."
       ;; If eat is not available, fall back to regular eshell
       (message "eat package not available, using regular eshell")
       (eshell t))))
+
+;;;###autoload
+(defun my/open-vterm-here ()
+  "Open vterm in current buffer's directory."
+  (interactive)
+  (let ((default-directory (my/current-dir)))
+    ;; Ensure vterm is loaded
+    (if (require 'vterm nil t)
+        (progn
+          ;; Open vterm
+          (vterm))
+      ;; If vterm is not available, fall back to ansi-term
+      (message "vterm package not available, using ansi-term")
+      (my/open-ansi-term-here))))
+
+;;;###autoload
+(defun my/open-ansi-term-here ()
+  "Open ansi-term in current buffer's directory."
+  (interactive)
+  (let ((default-directory (my/current-dir)))
+    (ansi-term (getenv "SHELL"))))
 
 (provide 'helpers)
 ;;; helpers.el ends here

@@ -1,10 +1,10 @@
-;;; my-ssh.el --- SSH sessionizer with consult and perspective integration -*- lexical-binding: t -*-
+;;; my-ssh.el --- SSH sessionizer with consult integration -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;; SSH sessionizer functionality that:
 ;; 1. Reads server inventory from CSV file (~/.emacs.d/data/servers.csv) as primary source
 ;; 2. Provides interactive server selection using Consult with display names
-;; 3. Creates a perspective named after the selected server
+;; 3. Opens SSH connection (eshell or TRAMP)
 ;; 4. Opens TRAMP connection (dired and/or shell)
 ;; 5. Generates SSH config entries on-demand with key management
 ;; 6. Supports MFA configuration via SSH config options
@@ -346,16 +346,7 @@ If CSV is used, ensures SSH config entries exist (generates if missing)."
                               (if use-csv csv-file my/ssh-config-file)))
         (find-file (if use-csv csv-file my/ssh-config-file)))
       nil))))
-;;==============================================================================
-;; PERSPECTIVE INTEGRATION
-;;==============================================================================
 
-(defun my/ssh-create-server-perspective (hostname)
-  "Create or switch to perspective named after HOSTNAME.
-Replace dots with underscores for perspective name."
-  (let ((persp-name (replace-regexp-in-string "\\." "_" hostname)))
-    (my/persp-switch-or-create persp-name)
-    persp-name))
 
 ;;==============================================================================
 ;; SSH CONNECTION HANDLING
@@ -402,15 +393,14 @@ Opens dired or shell on remote home directory via TRAMP SSH."
 ;;==============================================================================
 
 (defun my/ssh-sessionizer ()
-  "SSH sessionizer: select server, create perspective, open SSH connection.
+  "SSH sessionizer: select server and open SSH connection.
 Interactive function bound to C-S-f."
   (interactive)
   (let ((server (my/ssh-select-server)))
     (when server
       (let* ((hostname (car server))
-             (username (cdr server))
-             (persp-name (my/ssh-create-server-perspective hostname)))
-        (message "Connecting to %s@%s in perspective %s" username hostname persp-name)
+             (username (cdr server)))
+        (message "Connecting to %s@%s" username hostname)
         ;; Open SSH connection (TRAMP or eshell)
         (if my/ssh-use-tramp
             (my/ssh-connect-tramp hostname username)

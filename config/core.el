@@ -33,12 +33,13 @@
 
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                          ("melpa-mirror" . "https://www.mirrorservice.org/sites/melpa.org/packages/")
                           ("gnu" . "https://elpa.gnu.org/packages/")
                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
 
 ;; Initialize package system (called automatically by Emacs 27+, but call early for use-package)
 (package-initialize)
+;; Ensure org-roam is included in packages to install
+(add-to-list 'package-selected-packages 'org-roam)
 
 ;; Auto-install missing packages from package-selected-packages
 (defun my/ensure-packages-installed ()
@@ -59,6 +60,16 @@
 
 ;; Run package installation (can be commented out after first run)
 (my/ensure-packages-installed)
+
+;;==============================================================================
+;; SYSTEM PATH
+;;==============================================================================
+
+;; Ensure system directories are in exec-path for language servers
+(dolist (dir '("/usr/sbin" "/usr/local/sbin" "/sbin" "/bin"))
+  (when (and (file-directory-p dir)
+             (not (member dir exec-path)))
+    (add-to-list 'exec-path dir)))
 
 ;;==============================================================================
 ;; NATIVE COMPILATION (JIT)
@@ -116,6 +127,16 @@ Useful after updating Emacs or when native compilation was disabled."
         gcmh-high-cons-threshold (* 32 1024 1024)))
 
 ;;==============================================================================
+;; VTERM CONFIGURATION
+;;==============================================================================
+
+(use-package vterm
+  :ensure t
+  :commands vterm
+  :config
+  (setq vterm-max-scrollback 10000))
+
+;;==============================================================================
 ;; FONT CONFIGURATION (Wayland / HiDPI / NO XLFD)
 ;;==============================================================================
 
@@ -130,7 +151,6 @@ Useful after updating Emacs or when native compilation was disabled."
 ;; Default font selection
 (defvar my/default-font
   (font-spec :family "CaskaydiaCove Nerd Font"
-             :weight 'semi-bold
              :size 18))
 
 (defun my/apply-fonts (&optional frame)
@@ -139,11 +159,9 @@ Useful after updating Emacs or when native compilation was disabled."
     (set-frame-font my/default-font t t)
     (set-face-attribute 'default nil
                         :family "CaskaydiaCove Nerd Font"
-                        :weight 'semi-bold
                         :height my/default-font-size)
     (set-face-attribute 'fixed-pitch nil
                         :family "CaskaydiaCove Nerd Font"
-                        :weight 'semi-bold
                         :height my/default-font-size)
     (set-face-attribute 'variable-pitch nil
                         :family "CaskaydiaCove Nerd Font"
@@ -211,6 +229,19 @@ Useful after updating Emacs or when native compilation was disabled."
       auto-save-default t
       auto-save-timeout 20
       auto-save-interval 200)
+
+;;==============================================================================
+;; DIRED CONFIGURATION
+;;==============================================================================
+
+;; Sort directories first (requires GNU ls)
+(setq dired-listing-switches "-alh --group-directories-first")
+
+;; Enable dired-dwim-target (copy/move between two dired buffers)
+(setq dired-dwim-target t)
+
+;; Auto-revert dired buffers when files change
+(add-hook 'dired-mode-hook 'auto-revert-mode)
 
 (provide 'core)
 ;;; core.el ends here

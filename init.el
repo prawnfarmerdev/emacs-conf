@@ -38,18 +38,19 @@
 
 ;; Load modules in dependency order
 (load "core")         ; Package management, UI, editor behavior, fonts
-(load "my-evil")      ; Evil mode & evil-collection  
+(load "my-evil")      ; Evil mode & evil-collection
 (load "completion")   ; Vertico, orderless, consult, embark, marginalia
 (load "helpers")      ; Helper functions (directory, search, terminal)
+(load "my-org")       ; Org-mode and org-roam configuration
 (when my/enable-git
   (load "git"))          ; Git configuration (Magit)
 (when my/enable-terminal-enhancements
   (load "my-eshell"))    ; Enhanced eshell configuration
-(load "my-perspective")  ; Workspace management with custom switcher
-(load "my-tab-line")   ; Tab-bar integration with perspective
+;; (load "my-perspective")  ; Workspace management with custom switcher - DISABLED
+;; (load "my-tab-line")   ; Tab-bar integration with perspective - DISABLED
 (load "my-navigation") ; Navigation with consult (replaces FZF)
 (when my/enable-ssh
-  (load "my-ssh"))       ; SSH sessionizer with consult and perspective
+  (load "my-ssh"))       ; SSH sessionizer with consult
 (load "keybindings")  ; Tmux-style keybindings (depends on helpers)
 (load "theme")        ; Solarized theme & face customizations
 (load "languages")    ; Programming language modes
@@ -73,17 +74,11 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(color-theme-sanityinc-solarized eat embark-consult evil-collection
-                                     gcmh general go-mode helpful
-                                     js2-mode magit-delta magit-todos
-                                     marginalia markdown-mode
-                                     mustard-theme orderless
-                                     perspective python-mode
-                                     solarized-gruvbox-theme
-                                     solarized-theme tree-sitter-langs
-                                     treesit-auto vertico web-mode)))
- 
+ '(custom-safe-themes
+   '("833ddce3314a4e28411edf3c6efde468f6f2616fc31e17a62587d6a9255f4633"
+     default))
+ '(package-selected-packages nil))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

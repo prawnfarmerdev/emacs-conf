@@ -16,10 +16,7 @@
   :config
   (evil-mode 1)
   
-  ;; Ctrl-c exits to normal mode
-  (define-key evil-insert-state-map (kbd "C-c") 'evil-normal-state)
-  (define-key evil-visual-state-map (kbd "C-c") 'evil-normal-state)
-  (define-key evil-replace-state-map (kbd "C-c") 'evil-normal-state)
+
   
   ;; Ctrl-Shift-c for copy
   (define-key evil-visual-state-map (kbd "C-S-c") 'evil-yank)
@@ -39,7 +36,7 @@
         (delq 'ibuffer (delq 'eshell evil-collection-mode-list)))
   (evil-collection-init))
 
-;; Ensure evil stays in emacs state for tabulated-list-mode (used by perspective switcher)
+;; Ensure evil stays in emacs state for tabulated-list-mode (used by ibuffer and other list buffers)
 (with-eval-after-load 'evil
   (evil-set-initial-state 'tabulated-list-mode 'emacs)
   (evil-set-initial-state 'eshell-mode 'emacs))

@@ -5,20 +5,32 @@
 ;; Replaces FZF-based navigation with native Emacs consult framework.
 
 ;;==============================================================================
+;; CUSTOMIZATION
+;;==============================================================================
+
+(defcustom my/directory-roots
+  (list (expand-file-name "~/files")
+        (expand-file-name "~/projects")
+        (expand-file-name "~")
+        (expand-file-name "~/.config")
+        (expand-file-name "~/.local")
+        (expand-file-name "/home"))
+  "List of root directories to search for subdirectories."
+  :type '(repeat directory)
+  :group 'my-navigation)
+
+;;==============================================================================
 ;; HELPER FUNCTION (doesn't depend on consult)
 ;;==============================================================================
 
 (defun my/get-directory-candidates ()
   "Return list of subdirectory paths from common directories."
-  (let ((roots (list (expand-file-name "~/files")
-                     (expand-file-name "~/projects")
-                     (expand-file-name "~")
-                     (expand-file-name "~/.config")
-                     (expand-file-name "~/.local")
-                     (expand-file-name "/home")))
+  (let ((roots my/directory-roots)
         candidates)
     (dolist (root roots candidates)
       (when (file-directory-p root)
+        ;; Include the root directory itself
+        (push root candidates)
         (condition-case err
             (dolist (file (directory-files root t nil t))  ; full paths, no match, nosort
               (let ((full-path file))
@@ -32,29 +44,33 @@
 ;; CONSULT-BASED NAVIGATION FUNCTIONS
 ;;==============================================================================
 
-;; Main navigation function: Directory selection with perspective management
+;; Main navigation function: Directory selection
 ;;;###autoload
 (defun my/consult-sessionizer ()
-  "Consult-based directory selection with perspective workspace management.
-Switches to perspective named after directory and opens dired."
+  "Consult-based directory selection.
+Opens selected directory in dired."
   (interactive)
   (require 'consult)
   (let ((candidates (my/get-directory-candidates)))
-    (when candidates
-      (let ((selected (consult--read candidates
-                                     :prompt "Select directory: "
-                                     :require-match t
-                                     :sort nil
-                                     :category 'file
-                                     :history 'my/directory-history)))
-        (when (and selected (file-directory-p selected))
-          (let ((dir-name (file-name-nondirectory selected)))
-            ;; Switch to or create perspective
-            (my/persp-switch-or-create dir-name)
-            ;; Set default directory and open dired
-            (setq default-directory selected)
-            (dired selected)
-            (message "Perspective: %s" dir-name)))))))
+    (if candidates
+        (condition-case err
+            (let ((selected (consult--read candidates
+                                           :prompt "Select directory: "
+                                           :require-match t
+                                           :sort nil
+                                           :category 'file
+                                           :history 'my/directory-history)))
+              (when (and selected (file-directory-p selected))
+                 ;; Set default directory and open dired
+                 (setq default-directory selected)
+                 (dired selected)
+                  (message "Opened directory: %s" selected)))
+          (error
+           (message "Error in consult-sessionizer: %s" (error-message-string err))
+           nil))
+      ;; No candidates: fallback to dired in default-directory
+      (dired default-directory)
+      (message "Opened current directory"))))
 
 ;; Simple directory selection (without perspective management)
 ;;;###autoload
@@ -73,39 +89,7 @@ Switches to perspective named after directory and opens dired."
         (when selected
           (dired selected))))))
 
-;; Enhanced consult-find with better preview and filtering
-;;;###autoload
-(defun my/consult-find-enhanced ()
-  "Enhanced consult-find with improved preview and filtering."
-  (interactive)
-  (require 'consult)
-  (consult-find (my/current-dir)))
 
-;; Directory-based consult-ripgrep
-;;;###autoload
-(defun my/consult-ripgrep-dir ()
-  "Run consult-ripgrep starting from selected directory."
-  (interactive)
-  (require 'consult)
-  (let ((candidates (my/get-directory-candidates)))
-    (when candidates
-      (let ((selected (consult--read candidates
-                                     :prompt "Search in directory: "
-                                     :require-match t
-                                     :sort nil
-                                     :category 'file
-                                     :history 'my/directory-history)))
-        (when selected
-          (let ((default-directory selected))
-            (call-interactively #'consult-ripgrep)))))))
-
-;; Quick file search in current directory
-;;;###autoload
-(defun my/consult-find-current ()
-  "Quick file search in current directory with consult-find."
-  (interactive)
-  (require 'consult)
-  (consult-find (my/current-dir)))
 
 ;;==============================================================================
 ;; INTEGRATION WITH EXISTING WORKFLOW
@@ -114,7 +98,6 @@ Switches to perspective named after directory and opens dired."
 ;; Note: These functions replace the FZF-based functions:
 ;; - my/consult-sessionizer replaces my/emacs-sessionizer
 ;; - my/consult-project-dirs replaces my/fzf-project-dirs
-;; - my/consult-find-enhanced replaces fzf-directory
 ;; - consult-ripgrep already exists for grep functionality
 
 (provide 'my-navigation)
