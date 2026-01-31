@@ -109,7 +109,7 @@ Useful after updating Emacs or when native compilation was disabled."
 
 (use-package which-key
   :ensure t
-  :defer t
+  :demand t
   :config
   (which-key-mode)
   (setq which-key-idle-delay 0.0

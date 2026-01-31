@@ -34,122 +34,69 @@
      :prefix "C-x SPC")
   
   (my-leader-def
-    ;; Files
-    "f"   '(:ignore t :which-key "files")
-       "ff"  '(find-file :which-key "find file")
-     "fs"  '(save-buffer :which-key "save file")
-    "fr"  '(recentf-open-files :which-key "recent files")
-     "fd"  '(my/consult-project-dirs :which-key "find directory")
-
-     ;; Buffers
-    "b"   '(:ignore t :which-key "buffer")
-    "bs"  '(ibuffer :which-key "list buffers")
-    "bn"  '(next-buffer :which-key "next buffer")
-    "bp"  '(previous-buffer :which-key "previous buffer")
-    "bl"  '(evil-switch-to-windows-last-buffer :which-key "last buffer")
-    
-    ;; Harpoon marking
-    "m"   '(:ignore t :which-key "mark buffer")
-    "m1"  '(my/harpoon-mark-buffer-1 :which-key "mark slot 1")
-    "m2"  '(my/harpoon-mark-buffer-2 :which-key "mark slot 2")
-    "m3"  '(my/harpoon-mark-buffer-3 :which-key "mark slot 3")
-    "m4"  '(my/harpoon-mark-buffer-4 :which-key "mark slot 4")
-    "m5"  '(my/harpoon-mark-buffer-5 :which-key "mark slot 5")
-    "m6"  '(my/harpoon-mark-buffer-6 :which-key "mark slot 6")
-    "mc"  '(my/harpoon-clear-slot :which-key "clear slot")
-    "ml"  '(my/harpoon-list-buffers :which-key "list marked buffers")
-    
-     ;; Single keys
-     "c"   '(my/open-current-dir-dired :which-key "file explorer")
+      ;; Editing
+      "e"   '(:ignore t :which-key "editing")
+      "ed"  '(my/duplicate-line :which-key "duplicate line/region")
+      "eu"  '(my/unfill-paragraph :which-key "unfill paragraph")
      
-     ;; Editing
-     "e"   '(:ignore t :which-key "editing")
-     "ed"  '(my/duplicate-line :which-key "duplicate line/region")
-     "eu"  '(my/unfill-paragraph :which-key "unfill paragraph")
-    
-    ;; Terminal
-    "t"   '(:ignore t :which-key "terminal")
-    "te"  '(my/open-eshell-here :which-key "eshell")
-    "tt"  '(my/open-eat-eshell-here :which-key "eat eshell")
-    "tv"  '(my/open-vterm-here :which-key "vterm")
-    "ta"  '(my/open-ansi-term-here :which-key "ansi term")
-    
-    ;; Windows
-    "w"   '(:ignore t :which-key "windows")
-    "ws"  '(split-window-below :which-key "split horizontal")
-    "wv"  '(split-window-right :which-key "split vertical")
-    "wd"  '(delete-window :which-key "delete window")
-    "wo"  '(delete-other-windows :which-key "only this window")
-    "wh"  '(windmove-left :which-key "left")
-    "wj"  '(windmove-down :which-key "down")
-    "wk"  '(windmove-up :which-key "up")
-    "wl"  '(windmove-right :which-key "right")
-    "ww"  '(other-window :which-key "next window")
-    "w\"" '(split-window-below :which-key "split horizontal (tmux)")
-    "w%"  '(split-window-right :which-key "split vertical (tmux)")
-    "wq"  '(delete-window :which-key "close pane (tmux)")
-    "wz"  '(delete-other-windows :which-key "zoom pane (tmux)")
-    
-
-    
-    ;; Help
-    "h"   '(:ignore t :which-key "help")
-    "hf"  '(helpful-callable :which-key "function")
-    "hv"  '(helpful-variable :which-key "variable")
-    "hk"  '(helpful-key :which-key "key")
-    
-    ;; Git
-    "g"   '(:ignore t :which-key "git")
-    "gs"  '(my/magit-status-current-dir :which-key "status")
-    "gd"  '(my/magit-dispatch :which-key "dispatch")
-
+     ;; Help
+     "h"   '(:ignore t :which-key "help")
+     "hf"  '(helpful-callable :which-key "function")
+     "hv"  '(helpful-variable :which-key "variable")
+     "hk"  '(helpful-key :which-key "key")
      
-     ;; Notes
-     "n"   '(:ignore t :which-key "notes")
-     "nf"  '(org-roam-node-find :which-key "find node")
-     "ni"  '(org-roam-node-insert :which-key "insert node")
-     "nc"  '(org-roam-capture :which-key "capture note")
-     "nl"  '(org-roam-buffer-toggle :which-key "toggle backlinks")
-     "nd"  '(org-roam-dailies-capture-today :which-key "daily note")
-     "nD"  '(org-roam-dailies-goto-today :which-key "goto today")
-       "ns"  '(my/org-roam-search-notes :which-key "search notes")
-       "no"  '(my/org-roam-open-directory :which-key "open notes directory")
-       ;; Workout templates
-       "nw1" '(my/org-roam-capture-workout-1 :which-key "workout day 1")
-       "nw2" '(my/org-roam-capture-workout-2 :which-key "workout day 2")
-       "nw3" '(my/org-roam-capture-workout-3 :which-key "workout day 3")
-       "nw4" '(my/org-roam-capture-workout-4 :which-key "workout day 4")
-       "nw5" '(my/org-roam-capture-workout-5 :which-key "workout day 5")
+      ;; Notes
+      "n"   '(:ignore t :which-key "notes")
+      "nf"  '(org-roam-node-find :which-key "find node")
+      "ni"  '(org-roam-node-insert :which-key "insert node")
+      "nc"  '(org-roam-capture :which-key "capture note")
+      "nl"  '(org-roam-buffer-toggle :which-key "toggle backlinks")
+      "nd"  '(org-roam-dailies-capture-today :which-key "daily note")
+      "nD"  '(org-roam-dailies-goto-today :which-key "goto today")
+        "ns"  '(my/org-roam-search-notes :which-key "search notes")
+        "no"  '(my/org-roam-open-directory :which-key "open notes directory")
+        ;; Workout templates
+        "nw1" '(my/org-roam-capture-workout-1 :which-key "workout day 1")
+        "nw2" '(my/org-roam-capture-workout-2 :which-key "workout day 2")
+        "nw3" '(my/org-roam-capture-workout-3 :which-key "workout day 3")
+        "nw4" '(my/org-roam-capture-workout-4 :which-key "workout day 4")
+        "nw5" '(my/org-roam-capture-workout-5 :which-key "workout day 5")
  
+        ;; Quit
+       "q"   '(:ignore t :which-key "quit")
+        "qq"  '(save-buffers-kill-terminal :which-key "quit emacs"))
 
+;;==============================================================================
+;; C-X PREFIX BINDINGS
+;;==============================================================================
 
+;; C-x f prefix for file operations
+(defvar my-ctrl-x-f-map (make-sparse-keymap)
+  "Keymap for C-x f prefix.")
+(define-key ctl-x-map (kbd "f") my-ctrl-x-f-map)
+(define-key my-ctrl-x-f-map (kbd "s") 'save-buffer)
+(define-key my-ctrl-x-f-map (kbd "r") 'recentf-open-files)
 
-      ;; Quit
-     "q"   '(:ignore t :which-key "quit")
-      "qq"  '(save-buffers-kill-terminal :which-key "quit emacs"))
+;; C-x t prefix for terminal
+(defvar my-ctrl-x-t-map (make-sparse-keymap)
+  "Keymap for C-x t prefix.")
+(define-key ctl-x-map (kbd "t") my-ctrl-x-t-map)
+(define-key my-ctrl-x-t-map (kbd "e") 'my/open-eshell-here)
+(define-key my-ctrl-x-t-map (kbd "t") 'my/open-eat-eshell-here)
+(define-key my-ctrl-x-t-map (kbd "v") 'my/open-vterm-here)
+(define-key my-ctrl-x-t-map (kbd "a") 'my/open-ansi-term-here)
 
-;; Generated helper functions for each slot
-(dotimes (i 6)
-  (let ((slot (1+ i)))
-    (defalias (intern (format "my/harpoon-mark-buffer-%d" slot))
-      `(lambda () (interactive) (my/harpoon-mark-buffer ,slot)))))
+;; C-x g prefix for git (only if git functions are available)
+(when (fboundp 'my/magit-status-current-dir)
+  (defvar my-ctrl-x-g-map (make-sparse-keymap)
+    "Keymap for C-x g prefix.")
+  (define-key ctl-x-map (kbd "g") my-ctrl-x-g-map)
+  (define-key my-ctrl-x-g-map (kbd "s") 'my/magit-status-current-dir)
+  (define-key my-ctrl-x-g-map (kbd "d") 'my/magit-dispatch))
 
-      ;; Harpoon jump to marked buffers (C-x SPC j 1-6) - global bindings
-     (dotimes (i 6)
-       (let ((n (1+ i)))
-         (general-define-key
-          :states nil  ; Global - no state restrictions
-          :keymaps 'global
-          (concat "C-x SPC j " (number-to-string n))
-          `(lambda ()
-              (interactive)
-               (my/harpoon-jump-to-buffer ,n)))))
    
-     ;; Harpoon previous buffer (C-x SPC j 0) - global binding
-     (general-define-key
-      :states nil  ; Global - no state restrictions
-      :keymaps 'global
-      "C-x SPC j 0" 'my/harpoon-jump-to-previous-buffer)
+
+   
   
     (general-define-key
      :states nil  ; Global - no state restrictions
@@ -194,60 +141,7 @@
    :keymaps 'global
    "C-f" 'my/consult-sessionizer))
 
-;; Harpoon buffer marking system
-(defvar my/harpoon-buffers (make-vector 6 nil)
-  "Vector of 6 marked buffers for quick access.")
 
-(defvar my/harpoon-previous-buffer nil
-  "Previous buffer before last buffer switch.")
-
-(defun my/harpoon--record-before-switch (buffer &rest _)
-  "Record current buffer before switching to BUFFER."
-  (unless (eq (current-buffer) buffer)
-    (setq my/harpoon-previous-buffer (current-buffer))))
-
-(advice-add 'switch-to-buffer :before #'my/harpoon--record-before-switch)
-
-(defun my/harpoon-mark-buffer (slot)
-  "Mark current buffer in SLOT (1-6)."
-  (interactive "nMark buffer in slot (1-6): ")
-  (when (and (>= slot 1) (<= slot 6))
-    (aset my/harpoon-buffers (1- slot) (current-buffer))
-    (message "Marked buffer %s in slot %d" (buffer-name) slot)))
-
-(defun my/harpoon-jump-to-buffer (slot)
-  "Jump to buffer marked in SLOT (1-6)."
-  (interactive "nJump to slot (1-6): ")
-  (when (and (>= slot 1) (<= slot 6))
-    (let ((buf (aref my/harpoon-buffers (1- slot))))
-      (if (buffer-live-p buf)
-           (switch-to-buffer buf)
-        (message "Slot %d is empty or buffer no longer exists" slot)))))
-
-(defun my/harpoon-clear-slot (slot)
-  "Clear marked buffer in SLOT (1-6)."
-  (interactive "nClear slot (1-6): ")
-  (when (and (>= slot 1) (<= slot 6))
-    (aset my/harpoon-buffers (1- slot) nil)
-    (message "Cleared slot %d" slot)))
-
-(defun my/harpoon-list-buffers ()
-  "List all marked buffers."
-  (interactive)
-  (message "Harpoon buffers:")
-  (dotimes (i 6)
-    (let ((buf (aref my/harpoon-buffers i)))
-      (when (buffer-live-p buf)
-        (message "  %d: %s" (1+ i) (buffer-name buf))))))
-
-
-
-(defun my/harpoon-jump-to-previous-buffer ()
-  "Jump to previous buffer (before last harpoon jump)."
-  (interactive)
-  (if (and my/harpoon-previous-buffer (buffer-live-p my/harpoon-previous-buffer))
-      (switch-to-buffer my/harpoon-previous-buffer)
-    (message "No previous buffer recorded")))
 
 (provide 'keybindings)
 ;;; keybindings.el ends here
