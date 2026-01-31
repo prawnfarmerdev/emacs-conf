@@ -70,13 +70,10 @@
 ;; C-X PREFIX BINDINGS
 ;;==============================================================================
 
-;; C-x f prefix for file operations
+;; C-x f prefix for file operations (empty - moved to M-s f)
 (defvar my-ctrl-x-f-map (make-sparse-keymap)
   "Keymap for C-x f prefix.")
 (define-key ctl-x-map (kbd "f") my-ctrl-x-f-map)
-(define-key my-ctrl-x-f-map (kbd "f") 'find-file)
-(define-key my-ctrl-x-f-map (kbd "d") 'my/consult-project-dirs)
-(define-key my-ctrl-x-f-map (kbd "r") 'recentf-open-files)
 
 ;; C-x t prefix for terminal
 (defvar my-ctrl-x-t-map (make-sparse-keymap)

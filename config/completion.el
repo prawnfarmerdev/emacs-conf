@@ -143,7 +143,9 @@ If fd command is not available, falls back to consult-find."
 (defvar my-search-file-map (make-sparse-keymap)
   "Keymap for file searches under M-s f.")
 (define-key my-search-file-map (kbd "f") 'my/find-file-fd)
-(define-key my-search-file-map (kbd "d") 'my/consult-find-current-dir)
+(define-key my-search-file-map (kbd "d") 'find-file)
+(define-key my-search-file-map (kbd "x") 'my/consult-project-dirs)
+(define-key my-search-file-map (kbd "r") 'recentf-open-files)
 (when (boundp 'search-map)
   (define-key search-map (kbd "f") my-search-file-map))
 
