@@ -47,5 +47,17 @@
             (when (boundp 'evil-state)
               (evil-emacs-state))))
 
+;; Fix TAB key in org-mode to work with org-tempo templates
+(with-eval-after-load 'evil
+  (with-eval-after-load 'org
+    ;; Unbind TAB from evil-jump-forward in org-mode buffers
+    (define-key evil-motion-state-map (kbd "TAB") nil)
+    (define-key evil-normal-state-map (kbd "TAB") nil)
+    ;; Ensure TAB triggers org-cycle (which calls org-tempo via hook)
+    (evil-define-key 'normal org-mode-map (kbd "TAB") 'org-cycle)
+    (evil-define-key 'insert org-mode-map (kbd "TAB") 'org-cycle)
+    (evil-define-key 'visual org-mode-map (kbd "TAB") 'org-cycle)
+    (evil-define-key 'motion org-mode-map (kbd "TAB") 'org-cycle)))
+
 (provide 'my-evil)
 ;;; my-evil.el ends here

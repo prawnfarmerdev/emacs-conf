@@ -40,6 +40,7 @@
 (package-initialize)
 ;; Ensure org-roam is included in packages to install
 (add-to-list 'package-selected-packages 'org-roam)
+(add-to-list 'package-selected-packages 'ob-go)
 
 ;; Auto-install missing packages from package-selected-packages
 (defun my/ensure-packages-installed ()

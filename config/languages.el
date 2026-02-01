@@ -264,13 +264,16 @@
         corfu-count 10
         corfu-scroll-margin 4)
 
-  (define-key corfu-map (kbd "TAB") 'corfu-next)
-  (define-key corfu-map (kbd "<tab>") 'corfu-next)
-  (define-key corfu-map (kbd "S-TAB") 'corfu-previous)
-  (define-key corfu-map (kbd "<backtab>") 'corfu-previous)
+  (define-key corfu-map (kbd "C-n") 'corfu-next)
+  (define-key corfu-map (kbd "C-p") 'corfu-previous)
   (define-key corfu-map (kbd "RET") 'corfu-insert)
   (define-key corfu-map (kbd "M-d") 'corfu-info-documentation)
-  (define-key corfu-map (kbd "M-l") 'corfu-info-location))
+  (define-key corfu-map (kbd "M-l") 'corfu-info-location)
+  ;; Ensure TAB is not bound in corfu (use C-n/C-p instead)
+  (define-key corfu-map (kbd "TAB") nil)
+  (define-key corfu-map (kbd "<tab>") nil)
+  (define-key corfu-map (kbd "S-TAB") nil)
+  (define-key corfu-map (kbd "<backtab>") nil))
 
 (use-package corfu-popupinfo
   :after corfu

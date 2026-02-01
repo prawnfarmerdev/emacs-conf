@@ -158,11 +158,13 @@
   (message "Menudo theme enabled (graphical/daemon mode)"))
 
 ;; Evil cursor colors (override theme's cursor for Evil states)
-(setq evil-normal-state-cursor '("#b58900" box)
-      evil-insert-state-cursor '("#b58900" (bar . 7))
-      evil-visual-state-cursor '("#b58900" box)
-      evil-replace-state-cursor '("#dc322f" box)
-      evil-operator-state-cursor '("#b58900" hollow))
+;; Make cursor thicker overall, visual thicker than insert
+(when (boundp 'evil-normal-state-cursor)
+  (setq evil-normal-state-cursor '("#b58900" box)
+        evil-insert-state-cursor '("#b58900" (bar . 6))
+        evil-visual-state-cursor '("#b58900" (bar . 12))
+        evil-replace-state-cursor '("#dc322f" box)
+        evil-operator-state-cursor '("#b58900" hollow)))
 
 (require 'hl-line)
 (set-face-attribute 'hl-line nil :background "#000000")
@@ -172,13 +174,14 @@
 (setq-default cursor-in-non-selected-windows nil)
 (setq-default cursor-type 'box)
 
-(defun custom/update-cursor-type ()
-  (setq cursor-type
-        (if (derived-mode-p 'prog-mode 'text-mode)
-            '(bar . 4)
-          'box)))
-
-(add-hook 'post-command-hook 'custom/update-cursor-type)
+;; Disabled - interferes with Evil cursor states
+;; (defun custom/update-cursor-type ()
+;;   (setq cursor-type
+;;         (if (derived-mode-p 'prog-mode 'text-mode)
+;;             '(bar . 4)
+;;           'box)))
+;; 
+;; (add-hook 'post-command-hook 'custom/update-cursor-type)
 
 ;; Ensure theme is enabled for new graphical frames (especially in daemon mode)
 (defun menudo-enable-if-needed (&optional frame)

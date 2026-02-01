@@ -135,6 +135,8 @@
 
 ;; Enable org-mode for .org files
 (require 'org)
+(require 'org-tempo)
+(org-tempo-setup)
 (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
 
 ;; Basic org settings
@@ -154,6 +156,26 @@
 
 ;; Enable org-indent-mode for cleaner display (hides leading stars)
 (add-hook 'org-mode-hook 'org-indent-mode)
+(add-hook 'org-mode-hook (lambda ()
+                           (remove-hook 'completion-at-point-functions 'ispell-completion-at-point t)))
+
+;;==============================================================================
+;; ORG-BABEL CONFIGURATION
+;;==============================================================================
+;; Enable execution of code blocks for Python, Go, C, etc.
+;; Ensure corresponding compilers/interpreter are installed: python3, go, gcc
+
+(require 'ob)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (go . t)
+   (C . t)
+   (emacs-lisp . t)
+   (shell . t)))
+
+;; Disable confirmation for code block execution (set to t for safety)
+(setq org-confirm-babel-evaluate nil)
 
 ;;==============================================================================
 ;; HELPER FUNCTIONS
