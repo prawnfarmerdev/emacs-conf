@@ -126,6 +126,7 @@
   ((js-mode js-ts-mode typescript-mode typescript-ts-mode tsx-ts-mode) . lsp-deferred)
   ((c-mode c-ts-mode c++-mode c++-ts-mode) . lsp-deferred)
   ((rust-mode rust-ts-mode) . lsp-deferred)
+  (org-src-mode . my/lsp-org-src-deferred)
   (lsp-mode . lsp-enable-which-key-integration)
 
   :init
@@ -145,8 +146,8 @@
         lsp-enable-xref t
         lsp-enable-imenu t)
 
-  ;; CRITICAL: Let corfu handle completion
-  (setq lsp-completion-provider :none)
+   ;; Use LSP's completion-at-point function (corfu will display them)
+   (setq lsp-completion-provider :capf)
 
   ;; UI settings
   (setq lsp-headerline-breadcrumb-enable nil
@@ -163,13 +164,47 @@
   (setq lsp-enable-on-type-formatting nil
         lsp-enable-indentation nil)
 
-  ;; Language-specific settings
-  (lsp-register-custom-settings
-   '(("gopls.completeUnimported" t t)
-     ("gopls.staticcheck" t t)
-     ("gopls.usePlaceholders" t t)))
+   ;; Language-specific settings
+   (lsp-register-custom-settings
+    '(("gopls.completeUnimported" t t)
+      ("gopls.staticcheck" t t)
+      ("gopls.usePlaceholders" t t)))
 
-  ;; Keybindings
+   ;; LSP for org-src buffers (edit source blocks with C-c ')
+    (defun my/lsp-org-src-deferred ()
+      "Enable LSP in org-src buffers for supported languages."
+      (when (and (bound-and-true-p org-src-mode)
+                 (not (bound-and-true-p lsp-mode)))
+        (let ((lang-mode major-mode)
+              (supported-parents '(python-mode python-ts-mode
+                                   go-mode go-ts-mode
+                                   js-mode js-ts-mode
+                                   typescript-mode typescript-ts-mode
+                                   tsx-ts-mode
+                                   c-mode c-ts-mode
+                                   c++-mode c++-ts-mode
+                                   rust-mode rust-ts-mode
+                                   emacs-lisp-mode shell-mode sh-mode)))
+          (catch 'enabled
+            (dolist (parent supported-parents)
+              (when (derived-mode-p parent)
+
+                ;; Set up completion immediately (includes lsp-completion-at-point for when LSP starts)
+
+                (my/lsp-setup-completion)
+                ;; Also ensure completion is updated when LSP starts
+                (add-hook 'lsp-mode-hook
+                          (lambda ()
+
+                            (unless (bound-and-true-p lsp-completion-mode)
+                              (lsp-completion-mode 1))
+                            ;; Re-run setup to ensure lsp-completion-at-point is included
+                            (my/lsp-setup-completion))
+                          nil t) ; buffer-local hook
+                (lsp-deferred)
+                (throw 'enabled t)))))))
+
+   ;; Keybindings
   (define-key lsp-mode-map (kbd "C-c L a") 'lsp-execute-code-action)
   (define-key lsp-mode-map (kbd "C-c L r") 'lsp-rename)
   (define-key lsp-mode-map (kbd "C-c L f") 'lsp-format-buffer)
@@ -299,25 +334,26 @@
         cape-dabbrev-min-length 2)
 
   ;; Integrate with LSP
-  (defun my/lsp-setup-completion ()
-    "Setup completion for LSP buffers."
-    (setq-local completion-at-point-functions
-                (list (cape-capf-super
-                       #'lsp-completion-at-point
-                       #'cape-dabbrev
-                       #'cape-file))))
+    (defun my/lsp-setup-completion ()
+      "Setup completion for LSP buffers."
+      (setq-local completion-at-point-functions
+                  (list (cape-capf-super
+                         #'lsp-completion-at-point
+                         #'cape-dabbrev
+                         #'cape-file))))
 
   (add-hook 'lsp-completion-mode-hook #'my/lsp-setup-completion)
 
-  ;; For non-LSP prog-mode
-  (add-hook 'prog-mode-hook
-            (lambda ()
-              (unless (or (bound-and-true-p lsp-mode)
-                         (bound-and-true-p eglot--managed-mode))
-                (setq-local completion-at-point-functions
-                           (list #'cape-dabbrev
-                                 #'cape-file
-                                 #'cape-keyword))))))
+   ;; For non-LSP prog-mode (skip org-src buffers - they get LSP completion)
+   (add-hook 'prog-mode-hook
+             (lambda ()
+               (unless (or (bound-and-true-p lsp-mode)
+                          (bound-and-true-p eglot--managed-mode)
+                          (bound-and-true-p org-src-mode))  ; Skip org-src buffers
+                 (setq-local completion-at-point-functions
+                            (list #'cape-dabbrev
+                                  #'cape-file
+                                  #'cape-keyword))))))
 
 ;;==============================================================================
 ;; LISP CONFIGURATION
@@ -381,16 +417,36 @@
 
   (if (bound-and-true-p lsp-mode)
       (setq-local completion-at-point-functions
-                  (list #'lsp-completion-at-point
-                        #'cape-dabbrev
-                        #'cape-file))
+                  (list (cape-capf-super
+                         #'lsp-completion-at-point
+                         #'cape-dabbrev
+                         #'cape-file)))
     (setq-local completion-at-point-functions
-                (list #'cape-dabbrev
-                      #'cape-file)))
+                (list (cape-capf-super
+                       #'cape-dabbrev
+                       #'cape-file))))
 
   (message "LSP and completion fixed! Start typing."))
 
-(global-set-key (kbd "C-c C-l") 'my/fix-lsp-and-completion)
+ (global-set-key (kbd "C-c C-l") 'my/fix-lsp-and-completion)
+
+(defun my/check-completion-setup ()
+  "Diagnose completion setup in current buffer."
+  (interactive)
+  (message "=== Completion Diagnostic ===")
+  (message "Buffer: %s" (buffer-name))
+  (message "Major mode: %s" major-mode)
+  (message "Derived from prog-mode: %s" (derived-mode-p 'prog-mode))
+  (message "org-src-mode: %s" (bound-and-true-p org-src-mode))
+  (message "lsp-mode: %s" (bound-and-true-p lsp-mode))
+  (message "lsp-completion-mode: %s" (bound-and-true-p lsp-completion-mode))
+  (message "completion-at-point-functions: %S" completion-at-point-functions)
+  (message "--- Individual functions ---")
+  (dolist (fn completion-at-point-functions)
+    (message "  %s: %s" fn (if (functionp fn) "function" "not a function")))
+  (when (bound-and-true-p lsp-mode)
+    (message "LSP server: %s" (lsp--server-capabilities)))
+  (message "=== End Diagnostic ==="))
 
 ;;==============================================================================
 ;; INSTALLATION GUIDE

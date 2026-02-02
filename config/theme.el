@@ -33,7 +33,7 @@
        (sunflower-yellow   "#edb211")
        (burnt-orange       "#de451f")
        (sky-blue           "#268bd2")
-       (dim-blue           "#073642")
+;;       (dim-blue           "#073642")
        (bright-red         "#dc322f")
        (fresh-green        "#66bc11")
        (lime-green         "#003939")
@@ -42,9 +42,10 @@
        (pure-black         "#000000")
        (dusty-sage         "#9ba290")
        (coffee-brown       "#63523d")
+       (bellpepper-green   "#355e3b")
 
        (mode-line-foreground-active almost-white)
-       (mode-line-background-active dim-blue)
+       (mode-line-background-active bellpepper-green)
        (mode-line-border            "#161616")
        )
 
@@ -180,7 +181,7 @@
 ;;         (if (derived-mode-p 'prog-mode 'text-mode)
 ;;             '(bar . 4)
 ;;           'box)))
-;; 
+;;
 ;; (add-hook 'post-command-hook 'custom/update-cursor-type)
 
 ;; Ensure theme is enabled for new graphical frames (especially in daemon mode)

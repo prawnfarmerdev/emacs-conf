@@ -166,6 +166,13 @@
 ;; Ensure corresponding compilers/interpreter are installed: python3, go, gcc
 
 (require 'ob)
+;; Ensure language backends are loaded for completion
+(unless (featurep 'ob-python)
+  (require 'ob-python nil t))
+(unless (featurep 'ob-go)
+  (require 'ob-go nil t))
+(unless (featurep 'ob-C)
+  (require 'ob-C nil t))
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
@@ -174,8 +181,26 @@
    (emacs-lisp . t)
    (shell . t)))
 
+
 ;; Disable confirmation for code block execution (set to t for safety)
 (setq org-confirm-babel-evaluate nil)
+
+;; Language completion for #+begin_src blocks
+(defun my/org-language-completion-at-point ()
+  "Provide completion for language names after #+begin_src."
+  (when (and (looking-back "#\\+begin_src \\(.*\\)" (line-beginning-position))
+             (not (string-match-p "[[:space:]]"
+                                  (match-string 1))))
+    (let ((bounds (bounds-of-thing-at-point 'word)))
+      (list (or (car bounds) (point))
+            (or (cdr bounds) (point))
+            (mapcar #'symbol-name (mapcar #'car org-babel-load-languages))
+            :exclusive 'no))))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (add-hook 'completion-at-point-functions
+                      #'my/org-language-completion-at-point nil t)))
 
 ;;==============================================================================
 ;; HELPER FUNCTIONS
