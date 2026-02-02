@@ -37,10 +37,13 @@
                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
 
 ;; Initialize package system (called automatically by Emacs 27+, but call early for use-package)
-(package-initialize)
-;; Ensure org-roam is included in packages to install
+(unless (bound-and-true-p package--initialized)
+  (package-initialize))
+;; Ensure packages are included for auto-installation
 (add-to-list 'package-selected-packages 'org-roam)
 (add-to-list 'package-selected-packages 'ob-go)
+(add-to-list 'package-selected-packages 'embark-consult)
+(add-to-list 'package-selected-packages 'evil-collection)
 
 ;; Auto-install missing packages from package-selected-packages
 (defun my/ensure-packages-installed ()

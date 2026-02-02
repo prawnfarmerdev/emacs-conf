@@ -159,6 +159,16 @@
 (add-hook 'org-mode-hook (lambda ()
                            (remove-hook 'completion-at-point-functions 'ispell-completion-at-point t)))
 
+;; Source block editing settings
+(setq org-src-fontify-natively t  ; Use native fontification for source blocks
+      org-src-preserve-indentation t  ; Preserve indentation when editing
+      org-src-tab-acts-natively t)  ; TAB acts natively in source blocks
+
+;; Make source blocks more visible but not intrusive (remove blue background)
+(set-face-attribute 'org-block nil :background nil :foreground nil)
+(set-face-attribute 'org-block-begin-line nil :background nil :foreground "#666666")
+(set-face-attribute 'org-block-end-line nil :background nil :foreground "#666666")
+
 ;;==============================================================================
 ;; ORG-BABEL CONFIGURATION
 ;;==============================================================================
@@ -203,6 +213,50 @@
                       #'my/org-language-completion-at-point nil t)))
 
 ;;==============================================================================
+;; LSP IN ORG SOURCE BLOCKS
+;;==============================================================================
+
+;; Enable LSP in org-src edit buffers (when you edit with C-c ')
+(defun my/org-src-enable-lsp ()
+  "Enable LSP in org-src edit buffers for supported languages."
+  (when (and (bound-and-true-p org-src-mode)
+             (not (bound-and-true-p lsp-mode)))
+    (let ((supported-modes '(python-mode python-ts-mode
+                            go-mode go-ts-mode
+                            js-mode js-ts-mode
+                            typescript-mode typescript-ts-mode
+                            tsx-ts-mode
+                            c-mode c-ts-mode
+                            c++-mode c++-ts-mode
+                            rust-mode rust-ts-mode)))
+      (when (cl-some #'derived-mode-p supported-modes)
+        ;; Create a temporary file for LSP to work with
+        (let* ((ext (pcase major-mode
+                     ((or 'python-mode 'python-ts-mode) ".py")
+                     ((or 'go-mode 'go-ts-mode) ".go")
+                     ((or 'js-mode 'js-ts-mode) ".js")
+                     ((or 'typescript-mode 'typescript-ts-mode) ".ts")
+                     ('tsx-ts-mode ".tsx")
+                     ((or 'c-mode 'c-ts-mode) ".c")
+                     ((or 'c++-mode 'c++-ts-mode) ".cpp")
+                     ((or 'rust-mode 'rust-ts-mode) ".rs")
+                     (_ ".txt")))
+               (temp-file (make-temp-file "org-src-" nil ext)))
+          ;; Set buffer-file-name to the temp file
+          (setq-local buffer-file-name temp-file)
+          ;; Start LSP
+          (lsp-deferred)
+          ;; Clean up temp file on buffer kill
+          (add-hook 'kill-buffer-hook
+                    (lambda ()
+                      (when (file-exists-p temp-file)
+                        (delete-file temp-file)))
+                    nil t))))))
+
+;; Hook into org-src-mode
+(add-hook 'org-src-mode-hook #'my/org-src-enable-lsp)
+
+;;==============================================================================
 ;; HELPER FUNCTIONS
 ;;==============================================================================
 
@@ -236,32 +290,38 @@
     (with-current-buffer buf
       (erase-buffer)
       (insert "=== Org-mode Diagnostic ===\n\n")
-      
+
       (insert "1. Current Buffer:\n")
       (insert (format "   File: %s\n" (or (buffer-file-name) "No file")))
       (insert (format "   Major mode: %s\n" major-mode))
       (insert (format "   Derived from org-mode: %s\n\n" (derived-mode-p 'org-mode)))
-      
+
       (insert "2. Org-mode Features:\n")
       (insert (format "   org feature loaded: %s\n" (featurep 'org)))
-      (insert (format "   org-indent feature: %s\n\n" (featurep 'org-indent)))
-      
+      (insert (format "   org-indent feature: %s\n" (featurep 'org-indent)))
+      (insert (format "   org-src-mode: %s\n\n" (bound-and-true-p org-src-mode)))
+
       (insert "3. Org-mode Settings:\n")
       (insert (format "   org-hide-leading-stars: %s\n" org-hide-leading-stars))
       (insert (format "   org-startup-indented: %s\n" org-startup-indented))
       (insert (format "   org-indent-mode: %s\n" (bound-and-true-p org-indent-mode)))
       (insert (format "   org-hide-emphasis-markers: %s\n" org-hide-emphasis-markers))
       (insert (format "   org-pretty-entities: %s\n\n" org-pretty-entities))
-      
-      (insert "4. Font Lock:\n")
+
+      (insert "4. LSP in org-src:\n")
+      (insert (format "   lsp-mode: %s\n" (bound-and-true-p lsp-mode)))
+      (insert (format "   buffer-file-name: %s\n\n" (or buffer-file-name "nil")))
+
+      (insert "5. Font Lock:\n")
       (insert (format "   font-lock-mode: %s\n" (bound-and-true-p font-lock-mode)))
       (insert (format "   font-lock-keywords: %s\n\n" (if font-lock-keywords "Present" "Absent")))
-      
-      (insert "5. Quick Fixes:\n")
+
+      (insert "6. Quick Fixes:\n")
       (insert "   M-x org-mode - Switch to org-mode if not already\n")
       (insert "   M-x font-lock-mode - Enable syntax highlighting\n")
       (insert "   M-x org-indent-mode - Toggle indentation\n")
-      (insert "   M-x org-reload - Reload org-mode\n"))
+      (insert "   M-x org-reload - Reload org-mode\n")
+      (insert "   C-c ' - Edit source block (enables LSP automatically)\n"))
     (pop-to-buffer buf)))
 
 ;; Add diagnostic to keymap
@@ -280,6 +340,30 @@
 
 ;; Add fix to keymap
 (define-key my/org-roam-prefix-map (kbd "!") 'my/org-fix-display)
+
+(defun my/org-fix-source-block-editing ()
+  "Fix source block editing issues in current buffer.
+Resets any locks or edit states that might prevent editing."
+  (interactive)
+  ;; Check if we're in a source block
+  (let ((element (org-element-at-point)))
+    (when (eq (org-element-type element) 'src-block)
+      ;; Force exit any edit session
+      (when (fboundp 'org-edit-src-abort)
+        (ignore-errors (org-edit-src-abort)))
+      ;; Clear any edit locks
+      (setq-local org-src--beg-marker nil)
+      (setq-local org-src--end-marker nil)
+      (setq-local org-src--from-org-mode nil)
+      (setq-local org-src--allow-write-back nil)
+      ;; Refresh display
+      (font-lock-flush)
+      (message "Source block editing reset. Try editing again."))))
+
+;; Add to keymap
+(define-key my/org-roam-prefix-map (kbd "e") 'my/org-fix-source-block-editing)
+
+
 
 ;;==============================================================================
 ;; INITIALIZATION

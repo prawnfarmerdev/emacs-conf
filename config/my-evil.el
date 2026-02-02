@@ -33,7 +33,7 @@
   :after evil
   :config
   (setq evil-collection-mode-list 
-        (delq 'ibuffer (delq 'eshell evil-collection-mode-list)))
+        (delq 'ibuffer (delq 'eshell (delq 'vterm (delq 'pdf evil-collection-mode-list)))))
   (evil-collection-init))
 
 ;; Ensure evil stays in emacs state for tabulated-list-mode (used by ibuffer and other list buffers)

@@ -125,9 +125,8 @@
   ((go-mode go-ts-mode) . lsp-deferred)
   ((js-mode js-ts-mode typescript-mode typescript-ts-mode tsx-ts-mode) . lsp-deferred)
   ((c-mode c-ts-mode c++-mode c++-ts-mode) . lsp-deferred)
-  ((rust-mode rust-ts-mode) . lsp-deferred)
-  (org-src-mode . my/lsp-org-src-deferred)
-  (lsp-mode . lsp-enable-which-key-integration)
+   ((rust-mode rust-ts-mode) . lsp-deferred)
+   (lsp-mode . lsp-enable-which-key-integration)
 
   :init
    (setq lsp-keymap-prefix "C-c L")
@@ -156,6 +155,10 @@
         lsp-signature-auto-activate t
         lsp-signature-render-documentation t)
 
+  ;; Eldoc settings for inline signatures
+  (setq lsp-eldoc-enable-hover t
+        lsp-eldoc-render-all t)
+
   ;; File watching
   (setq lsp-enable-file-watchers t
         lsp-file-watch-threshold 2000)
@@ -171,38 +174,6 @@
       ("gopls.usePlaceholders" t t)))
 
    ;; LSP for org-src buffers (edit source blocks with C-c ')
-    (defun my/lsp-org-src-deferred ()
-      "Enable LSP in org-src buffers for supported languages."
-      (when (and (bound-and-true-p org-src-mode)
-                 (not (bound-and-true-p lsp-mode)))
-        (let ((lang-mode major-mode)
-              (supported-parents '(python-mode python-ts-mode
-                                   go-mode go-ts-mode
-                                   js-mode js-ts-mode
-                                   typescript-mode typescript-ts-mode
-                                   tsx-ts-mode
-                                   c-mode c-ts-mode
-                                   c++-mode c++-ts-mode
-                                   rust-mode rust-ts-mode
-                                   emacs-lisp-mode shell-mode sh-mode)))
-          (catch 'enabled
-            (dolist (parent supported-parents)
-              (when (derived-mode-p parent)
-
-                ;; Set up completion immediately (includes lsp-completion-at-point for when LSP starts)
-
-                (my/lsp-setup-completion)
-                ;; Also ensure completion is updated when LSP starts
-                (add-hook 'lsp-mode-hook
-                          (lambda ()
-
-                            (unless (bound-and-true-p lsp-completion-mode)
-                              (lsp-completion-mode 1))
-                            ;; Re-run setup to ensure lsp-completion-at-point is included
-                            (my/lsp-setup-completion))
-                          nil t) ; buffer-local hook
-                (lsp-deferred)
-                (throw 'enabled t)))))))
 
    ;; Keybindings
   (define-key lsp-mode-map (kbd "C-c L a") 'lsp-execute-code-action)
@@ -225,18 +196,20 @@
   :hook (lsp-mode . lsp-ui-mode)
   :config
   (setq lsp-ui-sideline-enable t
-        lsp-ui-sideline-show-hover nil
+        lsp-ui-sideline-show-hover t
         lsp-ui-sideline-show-diagnostics t
         lsp-ui-sideline-show-code-actions t
         lsp-ui-sideline-delay 0.2
+        lsp-ui-sideline-update-mode 'line
 
         lsp-ui-peek-enable t
         lsp-ui-peek-always-show t
 
         lsp-ui-doc-enable t
         lsp-ui-doc-position 'at-point
-        lsp-ui-doc-delay 0.5
+        lsp-ui-doc-delay 0.2
         lsp-ui-doc-show-with-cursor t
+        lsp-ui-doc-show-with-mouse t
         lsp-ui-doc-max-width 80
         lsp-ui-doc-max-height 30)
 
@@ -257,6 +230,14 @@
   (lsp-treemacs-sync-mode 1)
   (define-key lsp-mode-map (kbd "C-c L e") 'lsp-treemacs-errors-list)
   (define-key lsp-mode-map (kbd "C-c L S") 'lsp-treemacs-symbols))
+
+;;==============================================================================
+;; LSP FOR ORG SOURCE BLOCKS
+;;==============================================================================
+;; LSP works in org-src edit buffers (C-c ' to edit a source block).
+;; The function `my/lsp-org-src-deferred` enables LSP in these buffers.
+;; For inline LSP in Org buffers, consider installing `lsp-org` from
+;; MELPA unstable or GitHub: https://github.com/emacs-lsp/lsp-org
 
 ;;==============================================================================
 ;; FLYCHECK: Syntax checking
@@ -354,6 +335,83 @@
                             (list #'cape-dabbrev
                                   #'cape-file
                                   #'cape-keyword))))))
+
+;; (defun my/lsp-org-src-deferred ()
+;;   "Enable LSP in org-src buffers for supported languages."
+;;   (when (and (bound-and-true-p org-src-mode)
+;;              (not (bound-and-true-p lsp-mode)))
+;;     (let ((lang-mode major-mode)
+;;           (supported-parents '(python-mode python-ts-mode
+;;                                go-mode go-ts-mode
+;;                                js-mode js-ts-mode
+;;                                typescript-mode typescript-ts-mode
+;;                                tsx-ts-mode
+;;                                c-mode c-ts-mode
+;;                                c++-mode c++-ts-mode
+;;                                rust-mode rust-ts-mode
+;;                                emacs-lisp-mode shell-mode sh-mode)))
+;;       (catch 'enabled
+;;         (dolist (parent supported-parents)
+;;           (when (derived-mode-p parent)
+;;             ;; Set up completion immediately (includes lsp-completion-at-point for when LSP starts)
+;;             (my/lsp-setup-completion)
+;;             ;; Also ensure completion is updated when LSP starts
+;;             (add-hook 'lsp-mode-hook
+;;                       (lambda ()
+;;                         (unless (bound-and-true-p lsp-completion-mode)
+;;                           (lsp-completion-mode 1))
+;;                         ;; Re-run setup to ensure lsp-completion-at-point is included
+;;                         (my/lsp-setup-completion))
+;;                       nil t) ; buffer-local hook
+;;             ;; Start LSP for org-src buffer
+;;             (let ((buffer-file-name (my/lsp-org-src-buffer-file-name)))
+;;               (message "Starting LSP for org-src buffer (%s) with temp file: %s" major-mode buffer-file-name)
+;;               (lsp))
+;;             (throw 'enabled t)))))))
+;; 
+;; (defvar-local my/lsp-org-src-temp-file nil
+;;   "Temporary file associated with current org-src buffer for LSP.")
+;; 
+;; (defun my/lsp-org-src-buffer-file-name ()
+;;   "Return a temporary file name for the org-src buffer to enable LSP.
+;; Uses the original org file's directory and a temporary name with the
+;; appropriate extension for the current major mode.
+;; Creates the file if it doesn't exist, and arranges for its deletion."
+;;   (if (and my/lsp-org-src-temp-file
+;;            (file-exists-p my/lsp-org-src-temp-file))
+;;       (progn
+;;         (message "Using existing temp file for LSP: %s" my/lsp-org-src-temp-file)
+;;         my/lsp-org-src-temp-file)
+;;     (let* ((org-file (or (bound-and-true-p org-src-source-file-name)
+;;                          (buffer-file-name (bound-and-true-p org-src--source-buffer))
+;;                          default-directory))
+;;            (dir (if (stringp org-file) (file-name-directory org-file) default-directory))
+;;            (ext (cond
+;;                  ((derived-mode-p 'python-mode python-ts-mode) ".py")
+;;                  ((derived-mode-p 'go-mode go-ts-mode) ".go")
+;;                  ((derived-mode-p 'js-mode js-ts-mode) ".js")
+;;                  ((derived-mode-p 'typescript-mode typescript-ts-mode) ".ts")
+;;                  ((derived-mode-p 'tsx-ts-mode) ".tsx")
+;;                  ((derived-mode-p 'c-mode c-ts-mode) ".c")
+;;                  ((derived-mode-p 'c++-mode c++-ts-mode) ".cpp")
+;;                  ((derived-mode-p 'rust-mode rust-ts-mode) ".rs")
+;;                  ((derived-mode-p 'emacs-lisp-mode) ".el")
+;;                  ((derived-mode-p 'shell-mode sh-mode) ".sh")
+;;                  (t ".txt")))
+;;            (buffer-hash (format "%x" (abs (sxhash (buffer-name)))))
+;;            (temp-name (concat (file-name-as-directory dir) "_lsp_org_src_" buffer-hash ext)))
+;;       (message "Creating temp file for LSP: %s" temp-name)
+;;       (make-empty-file temp-name t)
+;;       (setq my/lsp-org-src-temp-file temp-name)
+;;       (add-hook 'kill-buffer-hook #'my/lsp-org-src-delete-temp-file nil t)
+;;       temp-name)))
+;; 
+;; (defun my/lsp-org-src-delete-temp-file ()
+;;   "Delete the temporary file created for LSP in org-src buffer."
+;;   (when (and my/lsp-org-src-temp-file
+;;              (file-exists-p my/lsp-org-src-temp-file))
+;;     (delete-file my/lsp-org-src-temp-file)
+;;     (setq my/lsp-org-src-temp-file nil)))
 
 ;;==============================================================================
 ;; LISP CONFIGURATION
