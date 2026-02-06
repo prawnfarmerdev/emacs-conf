@@ -116,8 +116,10 @@ If fd command is not available, falls back to consult-find."
                       (read-directory-name "Search from directory: ")
                     (expand-file-name "~"))))
     (if (executable-find "fd")
-        (let ((default-directory root-dir))
-          (consult-fd ""))
+        (progn
+          (message "Using fd for file search in %s" root-dir)
+          (let ((default-directory root-dir))
+            (consult-fd "")))
       (message "fd command not found. Using consult-find instead.")
       (consult-find root-dir))))
 

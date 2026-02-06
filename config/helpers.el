@@ -71,9 +71,18 @@ Avoids empty interface by ensuring pattern is entered before consult starts."
 
 ;;;###autoload
 (defun my/consult-find-current-dir ()
-  "Run consult-find in current directory for fuzzy file search."
+  "Run consult-find in current directory for fuzzy file search.
+Uses consult-fd if available, otherwise consult-find."
   (interactive)
-  (consult-find (my/current-dir)))
+  (require 'consult)
+  (let ((dir (my/current-dir)))
+    (if (executable-find "fd")
+        (progn
+          (message "Using fd for file search in %s" dir)
+          (let ((default-directory dir))
+            (consult-fd "")))
+      (message "fd not found, using find for file search in %s" dir)
+      (consult-find dir))))
 
 
 
