@@ -66,8 +66,15 @@ Avoids empty interface by ensuring pattern is entered before consult starts."
       (condition-case err
           (consult-ripgrep dir pattern)
         (error
-         (message "consult-ripgrep error: %s" err)
-         (user-error "Search failed: %s" (error-message-string err)))))))
+          (message "consult-ripgrep error: %s" err)
+          (user-error "Search failed: %s" (error-message-string err)))))))
+
+;;;###autoload
+(defun my/consult-find-current-dir ()
+  "Run consult-find in current directory for fuzzy file search."
+  (interactive)
+  (consult-find (my/current-dir)))
+
 
 
 

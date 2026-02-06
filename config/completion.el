@@ -77,7 +77,7 @@
          ("M-g k" . consult-global-mark)
          ("M-g i" . consult-imenu)
            ;; M-s bindings (search-map)
-           ("M-s f" . find-file)
+           ("M-s f" . my/consult-find-current-dir)
            ("M-s d" . my/find-file-fd)
            ("M-s r" . recentf-open-files)
            ("M-s /" . my/consult-ripgrep-current-dir)
