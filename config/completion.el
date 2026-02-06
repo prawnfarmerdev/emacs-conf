@@ -76,17 +76,21 @@
          ("M-g m" . consult-mark)
          ("M-g k" . consult-global-mark)
          ("M-g i" . consult-imenu)
-         ;; M-s bindings (search-map)
-         ("M-s d" . consult-find)
-         ("M-s D" . consult-locate)
-         ("M-s g" . consult-grep)
-         ("M-s G" . consult-git-grep)
-         ("M-s r" . consult-ripgrep)
-         ("M-s l" . consult-line)
-         ("M-s L" . consult-line-multi)
-         ("M-s k" . consult-keep-lines)
-          ("M-s u" . consult-focus-lines)
-          ("M-s /" . my/consult-ripgrep-current-dir)
+          ;; M-s bindings (search-map)
+          ("M-s f" . my/find-file-fd)
+          ("M-s d" . find-file)
+          ("M-s s" . consult-find)
+          ("M-s D" . consult-locate)
+          ("M-s g" . consult-grep)
+          ("M-s G" . consult-git-grep)
+          ("M-s r" . consult-ripgrep)
+          ("M-s l" . consult-line)
+          ("M-s L" . consult-line-multi)
+          ("M-s k" . consult-keep-lines)
+           ("M-s u" . consult-focus-lines)
+           ("M-s /" . my/consult-ripgrep-current-dir)
+           ("M-s v" . recentf-open-files)
+           ("M-s x" . my/consult-project-dirs)
           ;; Other custom bindings
           ("M-y" . consult-yank-pop))
    :config
@@ -139,15 +143,7 @@ If fd command is not available, falls back to consult-find."
       (message "fd command not found. Using consult-find instead.")
       (consult-find root-dir))))
 
-;;; M-s f prefix for file searches
-(defvar my-search-file-map (make-sparse-keymap)
-  "Keymap for file searches under M-s f.")
-(define-key my-search-file-map (kbd "f") 'my/find-file-fd)
-(define-key my-search-file-map (kbd "d") 'find-file)
-(define-key my-search-file-map (kbd "x") 'my/consult-project-dirs)
-(define-key my-search-file-map (kbd "r") 'recentf-open-files)
-(when (boundp 'search-map)
-  (define-key search-map (kbd "f") my-search-file-map))
+
 
 ;;; Embark - contextual actions
 (use-package embark

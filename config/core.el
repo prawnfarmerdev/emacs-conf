@@ -45,6 +45,8 @@
 (add-to-list 'package-selected-packages 'embark-consult)
 (add-to-list 'package-selected-packages 'evil-collection)
 
+
+
 ;; Auto-install missing packages from package-selected-packages
 (defun my/ensure-packages-installed ()
   "Ensure all packages in `package-selected-packages` are installed."
@@ -52,7 +54,7 @@
     ;; Refresh package contents if needed
     (unless package-archive-contents
       (package-refresh-contents))
-    
+
     ;; Install each missing package
     (dolist (pkg package-selected-packages)
       (unless (package-installed-p pkg)
@@ -85,7 +87,7 @@
   (setq package-native-compile t)
   ;; Enable deferred background compilation
   (setq native-comp-deferred-compilation t)
-  
+
   ;; Helper function to compile all installed packages
   (defun my/native-compile-all-packages ()
     "Compile all installed packages natively in the background.
@@ -98,7 +100,7 @@ Useful after updating Emacs or when native compilation was disabled."
         (when (file-directory-p dir)
           (native-compile-async dir t)))
       (message "Native compilation started for all packages in background")))
-  
+
   ;; Helper function to compile configuration files
   (defun my/native-compile-config ()
     "Compile configuration files natively for faster loading."
@@ -237,6 +239,7 @@ Useful after updating Emacs or when native compilation was disabled."
       auto-save-list-file-name nil
       auto-save-timeout 20
       auto-save-interval 200)
+(delete-selection-mode 1)
 
 ;;==============================================================================
 ;; DIRED CONFIGURATION

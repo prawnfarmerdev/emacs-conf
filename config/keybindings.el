@@ -70,7 +70,7 @@
 ;; C-X PREFIX BINDINGS
 ;;==============================================================================
 
-;; C-x f prefix for file operations (empty - moved to M-s f)
+;; C-x f prefix for file operations (empty - file searches now under M-s f/s/v/x)
 (defvar my-ctrl-x-f-map (make-sparse-keymap)
   "Keymap for C-x f prefix.")
 (define-key ctl-x-map (kbd "f") my-ctrl-x-f-map)

@@ -21,6 +21,10 @@
 
 (deftheme menudo "Menudo theme with black backgrounds, gray text, and blue highlights")
 
+;; Global color variables for other modules to use
+(defvar menudo-amber-gold "#fcaa05")
+(defvar menudo-pure-black "#000000")
+
 ;; Color palette
 (let* ((almost-white       "#cccccc")     ; Brighter gray for default text (was #999999)
        (charcoal-gray-lite "#1e1e1e")
