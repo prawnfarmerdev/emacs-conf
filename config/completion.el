@@ -113,19 +113,7 @@
 
      (define-key vertico-map (kbd "C-l") #'consult-preview-atpoint))
 
-;;; Custom find-file with recursive search
-(defun my/find-file-recursive (&optional dir)
-  "Find file recursively using consult-find (requires 'find' command).
-When called with prefix argument, prompt for starting directory.
-Otherwise start from current directory.
-If 'find' command is not available, falls back to regular find-file."
-  (interactive "P")
-  (if (executable-find "find")
-      (if dir
-          (consult-find (read-directory-name "Start from directory: "))
-        (consult-find default-directory))
-    (message "'find' command not found. Using regular find-file.")
-    (call-interactively #'find-file)))
+
 
 ;;; Find file with fd (fast recursive search)
 (defun my/find-file-fd (&optional dir)
